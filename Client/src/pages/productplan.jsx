@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaSearch, FaCheck, FaHome } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 import './productplan.css';
 import axios from 'axios';
 
@@ -13,26 +14,11 @@ const ProductPlan = () => {
     const [lot, setLot] = useState('');
     const [percent, setPercent] = useState('');
     const [department, setDepartment] = useState('');
-    const [data, setData] = useState([]);
     const [filtered, setFiltered] = useState([]);
     const [inventory, setInventory] = useState([]);
     const [showConfirm, setShowConfirm] = useState(false);
     const [inOutValues, setInOutValues] = useState({}); // { idx: { in: value, out: value } }
-
-    // --- โหลดข้อมูลจาก localStorage เมื่อเปิดหน้า ---
-    useEffect(() => {
-        const saved = JSON.parse(localStorage.getItem('productplan') || '[]');
-        if (saved.length > 0) {
-            setData(saved);
-        } else {
-            setData([]);
-        }
-    }, []);
-
-    // --- บันทึก data ลง localStorage ทุกครั้งที่ data เปลี่ยน ---
-    useEffect(() => {
-        localStorage.setItem('productplan', JSON.stringify(data));
-    }, [data]);
+    const navigate = useNavigate();
 
     // --- โหลดข้อมูล inventory จาก backend ---
     useEffect(() => {
@@ -41,13 +27,34 @@ const ProductPlan = () => {
             .catch(() => setInventory([]));
     }, []);
 
+    // --- โหลดสูตรจาก backend ตาม color code ---
+    useEffect(() => {
+        if (colorCodeInput) {
+            axios.get(`http://localhost:5000/api/product-plan/formula/${colorCodeInput}`)
+                .then(res => {
+                    // Map field ให้ตรงกับที่ frontend ใช้
+                    const mapped = (res.data || []).map(item => ({
+                        chemicalCode: item.chemicalCode,
+                        name: item.name,
+                        chemicalUse: item.qtyPerLot,
+                        lot: '',
+                        inStock: '',
+                        total: ''
+                    }));
+                    setFiltered(mapped);
+                })
+                .catch(() => setFiltered([]));
+        } else {
+            setFiltered([]);
+        }
+    }, [colorCodeInput]);
+
     // --- ฟังก์ชันค้นหา ---
     const handleSearch = () => {
         setColorCode(colorCodeInput);
         setLot(lotInput);
         setPercent(percentInput);
-        // ไม่ต้อง filter จาก data แล้ว เพราะ filtered จะถูก set จาก useEffect ด้านล่าง
-        // setFiltered(result); // ลบออก
+        // ไม่ต้อง filter จาก data แล้ว เพราะ filtered จะถูก set จาก useEffect ด้านบน
     };
 
     // --- ฟังก์ชันเปลี่ยนค่า In/Out ---
@@ -95,28 +102,6 @@ const ProductPlan = () => {
         }
     };
 
-    // --- โหลดสูตรจาก backend ตาม color code ---
-    useEffect(() => {
-        if (colorCodeInput) {
-            axios.get(`http://localhost:5000/api/product-plan/formula/${colorCodeInput}`)
-                .then(res => {
-                    // Map field ให้ตรงกับที่ frontend ใช้
-                    const mapped = (res.data || []).map(item => ({
-                        chemicalCode: item.chemicalCode,
-                        name: item.name,
-                        chemicalUse: item.qtyPerLot,
-                        lot: '',
-                        inStock: '',
-                        total: ''
-                    }));
-                    setFiltered(mapped);
-                })
-                .catch(() => setFiltered([]));
-        } else {
-            setFiltered([]);
-        }
-    }, [colorCodeInput]);
-
     return (
         <div className="productplan-bg">
             {/* Header */}
@@ -126,7 +111,7 @@ const ProductPlan = () => {
                     <div className="productplan-title">Product Plan</div>
                 </div>
                 <div className="productplan-user">
-                    <FaHome className="icon-home" />
+                    <FaHome className="icon-home" onClick={() => navigate('/menu')} style={{ cursor: "pointer" }} />
                     <span>User Name Lastname</span>
                 </div>
             </div>
@@ -187,7 +172,7 @@ const ProductPlan = () => {
                     </button>
                     <button
                         className="productplan-bottom-btn"
-                        style={{ marginLeft: 8 }}
+                        style={{ marginLeft: 165 }}
                     >
                         ปุ่มแคท
                     </button>

@@ -485,6 +485,15 @@
   margin-bottom: 4px;
   font-weight: 600;
 }
+.noti-green {
+  background: #e6fbe6;
+  color: #207520;
+  border: 1px solid #7be07b;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
 
 .productplan-bottom-btn {
   background: #32698e; /* เปลี่ยนสีปุ่ม */

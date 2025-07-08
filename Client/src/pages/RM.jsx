@@ -11,15 +11,11 @@ const RM = () => {
   const [data, setData] = useState([]);
   const [showResult, setShowResult] = useState(false);
 
-  // เชื่อมต่อ backend ด้วย axios
+  // โหลดข้อมูลจาก backend (api/rm) และลบ localStorage ที่เกี่ยวข้อง
   useEffect(() => {
     axios.get("http://localhost:5000/api/rm")
       .then((res) => setData(res.data))
       .catch((err) => setData([]));
-  }, []);
-
-  useEffect(() => {
-    // ลบข้อมูล localStorage ที่เกี่ยวข้องกับ RM/Inventory/ProductPlan เมื่อเข้าเพจนี้
     localStorage.removeItem('productplan');
     localStorage.removeItem('planr-table');
     localStorage.removeItem('RM1.json');
@@ -45,7 +41,7 @@ const RM = () => {
         (item["Code"] || item.code) &&
         (item["Code"] || item.code).toLowerCase().includes(search.toLowerCase())
       )
-    : [];
+    : data;
 
   return (
     <div className="rm-container">
@@ -66,55 +62,60 @@ const RM = () => {
       <div className="rm-title">RM Stock</div>
       <div className="rm-username">User Name Lastname</div>
       <div className="rm-main-bg" />
-      <div className="rm-main-inner-bg" />
-      <div className="rm-inventory-btn" onClick={handleInventoryClick}>
-        <span className="rm-inventory-text">Inventory</span>
+      <div className="rm-main-inner-bg">
+        <div className="rm-table-bg">
+          <div className="rm-table-scroll">
+            <table className="rm-table">
+              <thead>
+                <tr>
+                  <th>Chemical code</th>
+                  <th>G-total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredData.map((item, idx) => (
+                  <tr key={idx}>
+                    <td
+                      style={{
+                        background:
+                          search && (item["Code"] || item.code) && (item["Code"] || item.code).toLowerCase().includes(search.toLowerCase())
+                            ? "#fff9c4"
+                            : "transparent"
+                      }}
+                    >
+                      {item["Code"] || item.code}
+                    </td>
+                    <td>
+                      {item["G-TOTAL"] !== undefined && item["G-TOTAL"] !== null
+                        ? Number(item["G-TOTAL"]).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                        : item.g_total !== undefined && item.g_total !== null
+                          ? Number(item.g_total).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                          : ""}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div className="rm-alert-list">
+          {filteredData
+            .filter(item => Number(item["G-TOTAL"] ?? item.g_total) === 0)
+            .map((item, idx) => (
+              <div key={idx} className="rm-alert-red">
+                <span className="alert-icon">🚨</span>
+                <b>{item["Code"] || item.code}</b> : สารนี้คงเหลือ 0
+              </div>
+            ))}
+        </div>
       </div>
-      <div className="rm-label-code">Chemical code :</div>
-      <div className="rm-label-total">G-total :</div>
+
       <div className="rm-home-icon">
         <FaHome
           className="rm-icon-home"
           style={{ cursor: "pointer" }}
           onClick={() => navigate("/menu")}
         />
-      </div>
-      <div className="rm-table-bg">
-        <div className="rm-table-scroll">
-          <table className="rm-table">
-            <thead>
-              <tr>
-                <th>Chemical code</th>
-                <th>G-total</th>
-              </tr>
-            </thead>
-            <tbody>
-              {showResult && filteredData.map((item, idx) => (
-                <tr key={idx}>
-                  <td
-                    style={{
-                      background:
-                        search && (item["Code"] || item.code) && (item["Code"] || item.code).toLowerCase().includes(search.toLowerCase())
-                          ? "#fff9c4"
-                          : "transparent"
-                    }}
-                  >
-                    {item["Code"] || item.code}
-                  </td>
-                  <td>
-                    {
-                      item["G-TOTAL"] !== undefined && item["G-TOTAL"] !== null
-                        ? Number(item["G-TOTAL"]).toFixed(2)
-                        : item.g_total !== undefined && item.g_total !== null
-                          ? Number(item.g_total).toFixed(2)
-                          : ''
-                    }
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
       </div>
     </div>
   );
