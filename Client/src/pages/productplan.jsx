@@ -62,18 +62,37 @@ const ProductPlan = () => {
     };
 
     // --- ฟังก์ชัน Submit ---
-    const handleConfirmSubmit = () => {
-        // เก็บข้อมูลลง localStorage (เหมือน logic เดิม)
-        const planRData = JSON.parse(localStorage.getItem('planr-table') || '[]');
-        planRData.push({
-            department,
-            colorCode: colorCodeInput,
-            lot: lotInput,
-            date: dateInput,
-            percent: percentInput
-        });
-        localStorage.setItem('planr-table', JSON.stringify(planRData));
-        setShowConfirm(false);
+    const handleConfirmSubmit = async () => {
+        // เตรียมข้อมูล chemicals
+        const chemicals = filtered.map((item, idx) => ({
+            chemicalCode: item.chemicalCode,
+            in: parseFloat(inOutValues[idx]?.in) || 0,
+            out: parseFloat(inOutValues[idx]?.out) || 0,
+            chemicalUse: parseFloat((item.chemicalUse + '').replace(/,/g, '')) || 0
+        }));
+        try {
+            await axios.post('http://localhost:5000/api/product-plan', {
+                department,
+                colorCode: colorCodeInput,
+                lot: lotInput,
+                percent: percentInput,
+                date: dateInput,
+                chemicals
+            });
+            setShowConfirm(false);
+            // รีเฟรช inventory หลังบันทึก
+            axios.get('http://localhost:5000/api/rm')
+                .then(res => setInventory(res.data))
+                .catch(() => setInventory([]));
+            // ล้าง input
+            setColorCodeInput('');
+            setLotInput('');
+            setPercentInput('');
+            setFiltered([]);
+            setInOutValues({});
+        } catch (err) {
+            alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+        }
     };
 
     // --- โหลดสูตรจาก backend ตาม color code ---
@@ -181,23 +200,7 @@ const ProductPlan = () => {
                         onChange={e => setDateInput(e.target.value)}
                     />
                 </div>
-                <button
-                    className="submit-btn"
-                    style={{
-                        marginLeft: 16,
-                        padding: "8px 24px",
-                        background: "#61bdee",
-                        color: "#fff",
-                        border: "none",
-                        borderRadius: 12,
-                        fontWeight: 600,
-                        fontSize: 18,
-                        cursor: "pointer"
-                    }}
-                    onClick={() => setShowConfirm(true)}
-                >
-                    Submit
-                </button>
+                
             </div>
             {/* Content */}
             <div className="productplan-content-wrapper" style={{ display: "flex", flexDirection: "row", position: "relative" }}>

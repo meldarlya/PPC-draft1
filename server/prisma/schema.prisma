@@ -13,6 +13,7 @@ model RM {
   code     String   @id
   name     String?  // optional เพื่อรองรับการ import ข้อมูลเก่า
   g_total  Float?
+  order    Int?     // <--- เพิ่มบรรทัดนี้
   formulas Formula[]
   productPlanRMs ProductPlanRM[]
 }

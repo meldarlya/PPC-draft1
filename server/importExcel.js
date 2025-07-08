@@ -11,17 +11,19 @@ async function main() {
   const data = xlsx.utils.sheet_to_json(sheet);
 
   // 2. อัปเดตข้อมูล RM ใน Database
-  for (const item of data) {
+  for (const [i, item] of data.entries()) {
     await prisma.rM.upsert({
       where: { code: item.Code },
       update: {
         name: item.NAME,
-        g_total: item['G-TOTAL']
+        g_total: item['G-TOTAL'],
+        order: i + 1 // ลำดับ row ใน Excel (เริ่มที่ 1)
       },
       create: {
         code: item.Code,
         name: item.NAME,
-        g_total: item['G-TOTAL']
+        g_total: item['G-TOTAL'],
+        order: i + 1
       }
     });
   }

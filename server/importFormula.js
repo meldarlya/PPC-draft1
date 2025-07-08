@@ -26,7 +26,7 @@ const formulas = [
   { colorCode: "SL92N0", chemicalCode: "T101", qtyPerLot: 2090 },
   { colorCode: "SL92N0", chemicalCode: "T102", qtyPerLot: 150 },
   { colorCode: "SL92N0", chemicalCode: "T103", qtyPerLot: 3193 },
-  { colorCode: "SL92N0", chemicalCode: "T082E", qtyPerLot: 25 }
+  { colorCode: "SL92N0", chemicalCode: "T082-E", qtyPerLot: 25 }
 ];
 
 async function main() {

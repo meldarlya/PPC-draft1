@@ -28,11 +28,11 @@ exports.createProductPlan = async (req, res) => {
       const inVal = parseFloat(c.in) || 0;
       const outVal = parseFloat(c.out) || 0;
       const useVal = parseFloat(c.chemicalUse) || 0;
-      const delta = inVal - outVal - useVal;
+      // ลด stock ตามสูตร: g_total = g_total + in - out - useVal
       await prisma.rM.update({
         where: { code: c.chemicalCode },
         data: {
-          g_total: { increment: delta }
+          g_total: { increment: inVal - outVal - useVal }
         }
       });
     }
