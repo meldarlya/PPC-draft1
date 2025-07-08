@@ -1,23 +1,32 @@
 import React, { useState, useEffect } from "react";
-import { FaHome } from "react-icons/fa"; // เพิ่มบรรทัดนี้
-import { useNavigate } from "react-router-dom"; // เพิ่มบรรทัดนี้
+import { FaHome } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 import "./PlanR.css";
+import axios from "axios";
 
 const PlanR = () => {
   const [search, setSearch] = useState("");
   const [rows, setRows] = useState([]);
-  const navigate = useNavigate(); // เพิ่มบรรทัดนี้
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const data = JSON.parse(localStorage.getItem("planr-table") || "[]");
-    setRows(data);
+    axios
+      .get("http://localhost:5000/api/product-plan")
+      .then((res) => setRows(res.data))
+      .catch(() => setRows([]));
   }, []);
+
+  const filteredRows = search
+    ? rows.filter((row) =>
+        (row.colorCode || "").toLowerCase().includes(search.toLowerCase())
+      )
+    : rows;
 
   return (
     <div>
       <div className="planr-bg-blue-right"></div>
       <div className="planr-bg-blue-left"></div>
-      {/* เพิ่ม header สำหรับไอคอนโฮมและชื่อผู้ใช้ */}
+      {/* Header */}
       <div
         className="planr-header"
         style={{
@@ -48,8 +57,6 @@ const PlanR = () => {
             margin: "24px 0 16px 0",
           }}
         >
-          {/* เพิ่มไอคอนโฮม */}
-          {/* ช่องค้นหา */}
           <input
             className="planr-search-planr"
             type="text"
@@ -95,16 +102,14 @@ const PlanR = () => {
               </tr>
             </thead>
             <tbody>
-              {rows.map((row, idx) => (
+              {filteredRows.map((row, idx) => (
                 <tr key={idx}>
                   <td>{row.department}</td>
                   <td>{row.colorCode}</td>
                   <td>{row.lot}</td>
                   <td>{row.date}</td>
                   <td>{row.percent}</td>
-                  <td>
-                    {/* ปุ่มดาวน์โหลดหรือไอคอน */}
-                  </td>
+                  <td>{/* ปุ่มดาวน์โหลดหรือไอคอน */}</td>
                 </tr>
               ))}
             </tbody>

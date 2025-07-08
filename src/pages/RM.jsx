@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import './RM.css';
 import { FaHome, FaSearch } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import axios from 'axios';
 
 const RM = () => {
   const navigate = useNavigate();
@@ -10,18 +11,14 @@ const RM = () => {
   const [data, setData] = useState([]);
   const [showResult, setShowResult] = useState(false);
 
-  // โหลดข้อมูลจาก inventory (RM1.json)
+  // โหลดข้อมูลจาก backend (api/rm) และลบ localStorage ที่เกี่ยวข้อง
   useEffect(() => {
-    // ถ้ามีใน localStorage ให้ใช้ข้อมูลล่าสุด
-    const local = localStorage.getItem('RM1.json');
-    if (local) {
-      setData(JSON.parse(local));
-    } else {
-      fetch("/RM1.json")
-        .then((res) => res.json())
-        .then((json) => setData(json))
-        .catch((err) => setData([]));
-    }
+    axios.get("http://localhost:5000/api/rm")
+      .then((res) => setData(res.data))
+      .catch((err) => setData([]));
+    localStorage.removeItem('productplan');
+    localStorage.removeItem('planr-table');
+    localStorage.removeItem('RM1.json');
   }, []);
 
   const handleSearchChange = (e) => {
@@ -41,8 +38,8 @@ const RM = () => {
   // ฟิลเตอร์ข้อมูลตาม code ที่ค้นหา (ถ้าไม่กรอกจะแสดงทั้งหมด)
   const filteredData = search
     ? data.filter(item =>
-        item["Code"] &&
-        item["Code"].toLowerCase().includes(search.toLowerCase())
+        (item["Code"] || item.code) &&
+        (item["Code"] || item.code).toLowerCase().includes(search.toLowerCase())
       )
     : data;
 
@@ -76,22 +73,24 @@ const RM = () => {
                 </tr>
               </thead>
               <tbody>
-                {(search ? filteredData : data).map((item, idx) => (
+                {filteredData.map((item, idx) => (
                   <tr key={idx}>
                     <td
                       style={{
                         background:
-                          search && item["Code"] && item["Code"].toLowerCase().includes(search.toLowerCase())
+                          search && (item["Code"] || item.code) && (item["Code"] || item.code).toLowerCase().includes(search.toLowerCase())
                             ? "#fff9c4"
                             : "transparent"
                       }}
                     >
-                      {item["Code"]}
+                      {item["Code"] || item.code}
                     </td>
                     <td>
                       {item["G-TOTAL"] !== undefined && item["G-TOTAL"] !== null
                         ? Number(item["G-TOTAL"]).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-                        : ""}
+                        : item.g_total !== undefined && item.g_total !== null
+                          ? Number(item.g_total).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                          : ""}
                     </td>
                   </tr>
                 ))}
@@ -100,12 +99,12 @@ const RM = () => {
           </div>
         </div>
         <div className="rm-alert-list">
-          {(search ? filteredData : data)
-            .filter(item => Number(item["G-TOTAL"]) === 0)
+          {filteredData
+            .filter(item => Number(item["G-TOTAL"] ?? item.g_total) === 0)
             .map((item, idx) => (
               <div key={idx} className="rm-alert-red">
                 <span className="alert-icon">🚨</span>
-                <b>{item["Code"]}</b> : สารนี้คงเหลือ 0
+                <b>{item["Code"] || item.code}</b> : สารนี้คงเหลือ 0
               </div>
             ))}
         </div>
