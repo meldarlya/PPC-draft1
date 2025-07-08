@@ -90,7 +90,7 @@ body, html {
 
 .rm-main-bg {
   width: 1333.2px;
-  height: 600px;
+  height: 640px;
   left: 68.4px;
   top: 86.4px;
   position: absolute;
@@ -100,69 +100,17 @@ body, html {
 
 .rm-main-inner-bg {
   width: 1306.8px;
-  height: 573.6px;
+  height: 615px;
   left: 80.4px;
   top: 97.2px;
   position: absolute;
   background: white;
   border-radius: 20.4px;
-}
-
-.rm-inventory-btn {
-  width: 165.6px;
-  height: 39.6px;
-  left: 472.8px;
-  top: 26.4px;
-  position: absolute;
-  background: #61BDEE;
-  border-radius: 13.2px;
-  cursor: pointer;
-  z-index: 10;
-  pointer-events: auto;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.2s, box-shadow 0.2s;
-}
-
-.rm-inventory-btn:hover {
-  background: #2986cc;
-  box-shadow: 0 4px 16px #2986cc44;
-}
-
-.rm-inventory-text {
-  width: 135.6px;
-  height: 25.2px;
-  text-align: center;
-  color: white;
-  font-size: 15.6px;
-  font-weight: 600;
-  line-height: 25.2px;
-  background: transparent;
-  border-radius: 8px;
-  pointer-events: none;
-}
-
-.rm-label-code {
-  position: absolute;
-  left: 150px;
-  top: 114px;
-  color: #2986cc;
-  font-size: 24px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  text-shadow: 0 1px 2px #e3f3fc;
-}
-
-.rm-label-total {
-  width: 253.2px;
-  height: 31.2px;
-  left: 122.4px;
-  top: 630px;
-  position: absolute;
-  color: #2D85C5;
-  font-size: 24px;
-  font-weight: 600;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 0;
 }
 
 .rm-label-name {
@@ -215,29 +163,33 @@ body, html {
 
 .rm-search-group {
   position: absolute;
-  left: 226.8px;
-  top: 26.4px;
+  left: 125px;      /* ปรับให้ตรงกับขอบซ้ายของตาราง */
+  top: 110px;       /* ปรับให้ต่ำลงหรือสูงขึ้นตามต้องการ */
   display: flex;
   align-items: center;
-  z-index: 3;
+  z-index: 10;      /* ให้ลอยอยู่เหนือ bg */
+  background: #fff;
+  border-radius: 13.2px;
+  box-shadow: 0 2px 8px #b3e0ff55;
+  padding: 0 8px 0 0;
 }
 
 .rm-search-input {
-  width: 168px;
-  height: 39.6px;
+  width: 180px;
+  height: 37px;
   border-radius: 13.2px 0 0 13.2px;
-  border: none;
+  border: 1.5px solid #61bdee;
   outline: none;
   padding-left: 16px;
   font-size: 16px;
   font-family: 'Inter', sans-serif;
-  background: white;
+  background: #fff;
   box-shadow: none;
 }
 
 .rm-search-btn {
   width: 49.2px;
-  height: 39.6px;
+  height: 40px;
   background: #61BDEE;
   border: none;
   border-radius: 0 13.2px 13.2px 0;
@@ -246,6 +198,7 @@ body, html {
   justify-content: center;
   cursor: pointer;
   transition: background 0.2s;
+  margin-left: 0;
 }
 
 .rm-search-btn:hover {
@@ -258,15 +211,13 @@ body, html {
 }
 
 .rm-table-bg {
-  position: absolute;
-  left: 120px;
-  top: 150px;
-  width: 1100px;         /* ขยายความกว้าง */
-  height: 400px;         /* ขยายความสูง */
+  position: relative;
+  width: 800px;
+  height: 470px;
   background: #A5D3EB;
   border-radius: 20px;
   padding: 32px 24px 24px 24px;
-  overflow: hidden;
+  margin: 70px 0 0 45px; /* ปรับให้ตารางอยู่ตรงกลางกล่อง */
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -304,8 +255,66 @@ body, html {
   font-size: 1.08rem;
   border-top: none;
   border-bottom: 3px solid #b3e0ff;
+  position: sticky;
+  top: 0;
+  z-index: 2;
 }
 
 .rm-table tr:last-child td {
   border-bottom: none;
+}
+
+.rm-alert-list {
+  position: relative;
+  margin-left: 32px;
+  margin-top: 70px;
+  width: 240px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  max-height: 500px;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.rm-alert-list::-webkit-scrollbar {
+  display: none;
+}
+
+.rm-alert-red {
+  background: #fff;
+  color: #e53935;
+  border-radius: 12px;
+  border: 1.5px solid #ffe0e0;
+  box-shadow: 0 2px 8px #ffe0e055;
+  padding: 12px 16px 12px 16px;
+  font-size: 1rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: box-shadow 0.2s;
+  word-break: break-word;
+}
+
+.rm-alert-red b {
+  color: #e53935;
+  font-weight: 700;
+  margin-right: 2px;
+  font-size: 1.05rem;
+  letter-spacing: 0.5px;
+}
+
+.rm-alert-red .alert-icon {
+  font-size: 1.2em;
+  margin-right: 6px;
+  /* ใช้ emoji หรือไอคอน svg ก็ได้ */
+}
+
+@keyframes alert-pop {
+  0% { transform: scale(0.95); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
 }
