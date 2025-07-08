@@ -1,332 +1,56 @@
 import React, { useState, useEffect } from 'react';
-import { FaSearch, FaCheck, FaCalendarAlt, FaHome } from 'react-icons/fa';
-import { useNavigate } from 'react-router-dom'; // เพิ่มบรรทัดนี้
+import { FaSearch, FaCheck, FaHome } from 'react-icons/fa';
 import './productplan.css';
+import axios from 'axios';
 
 const ProductPlan = () => {
-    // state สำหรับ input
+    // --- State สำหรับ input และผลลัพธ์ ---
     const [colorCodeInput, setColorCodeInput] = useState('');
     const [lotInput, setLotInput] = useState('');
     const [percentInput, setPercentInput] = useState('');
     const [dateInput, setDateInput] = useState(new Date().toISOString().slice(0, 10));
-
-    // state สำหรับแสดงผลหลังค้นหา
     const [colorCode, setColorCode] = useState('');
     const [lot, setLot] = useState('');
     const [percent, setPercent] = useState('');
     const [department, setDepartment] = useState('');
-
-    const [data, setData] = useState([
-        {
-            colorCode: "SL6200",
-            chemicalCode: "F001",
-            name: "H-acid",
-            lot: "",
-            chemicalUse: "808",
-            inStock: "",
-            total: ""
-        },
-        {
-            colorCode: "SL6200",
-            chemicalCode: "F002",
-            name: "NaNO2",
-            lot: "",
-            chemicalUse: "565",
-            inStock: "",
-            total: ""
-        },
-        {
-            colorCode: "SL6200",
-            chemicalCode: "F006",
-            name: "PNA",
-            lot: "",
-            chemicalUse: "363.5",
-            inStock: "",
-            total: ""
-        },
-        {
-            colorCode: "SL6200",
-            chemicalCode: "F108N",
-            name: "LS-9",
-            lot: "",
-            chemicalUse: "3.5",
-            inStock: "",
-            total: ""
-        },
-        {
-            colorCode: "SL6200",
-            chemicalCode: "F124",
-            name: "SM-acid",
-            lot: "",
-            chemicalUse: "14",
-            inStock: "",
-            total: ""
-        },
-        {
-            colorCode: "SL6200",
-            chemicalCode: "F120",
-            name: "Resorcinol",
-            lot: "",
-            chemicalUse: "264.7",
-            inStock: "",
-            total: ""
-        },
-        {
-            colorCode: "SL6200",
-            chemicalCode: "F129",
-            name: "DS-100",
-            lot: "",
-            chemicalUse: "692.8",
-            inStock: "",
-            total: ""
-        },
-        {
-            colorCode: "SL6200",
-            chemicalCode: "T001",
-            name: "NaCl",
-            lot: "",
-            chemicalUse: "6,000",
-            inStock: "",
-            total: ""
-        },
-        {
-            colorCode: "SL6200",
-            chemicalCode: "T011",
-            name: "FFA",
-            lot: "",
-            chemicalUse: "22",
-            inStock: "",
-            total: ""
-        },
-        {
-            colorCode: "SL6200",
-            chemicalCode: "T101",
-            name: "Na₂CO₃",
-            lot: "",
-            chemicalUse: "1,537.5",
-            inStock: "",
-            total: ""
-        },
-        {
-            colorCode: "SL6200",
-            chemicalCode: "T103",
-            name: "35%HCl",
-            lot: "",
-            chemicalUse: "3,112",
-            inStock: "",
-            total: ""
-        },
-        // เพิ่มข้อมูล SL92N0
-        {
-            colorCode: "SL92N0", chemicalCode: "F001", name: "H-acid", lot: "", chemicalUse: "1,308", inStock: "", total: ""
-        },
-        {
-            colorCode: "SL92N0", chemicalCode: "F002", name: "NaNO₂", lot: "", chemicalUse: "919", inStock: "", total: ""
-        },
-        {
-            colorCode: "SL92N0", chemicalCode: "F006", name: "PNA", lot: "", chemicalUse: "530", inStock: "", total: ""
-        },
-        {
-            colorCode: "SL92N0", chemicalCode: "F103", name: "MPDA", lot: "", chemicalUse: "225", inStock: "", total: ""
-        },
-        {
-            colorCode: "SL92N0", chemicalCode: "F108N", name: "LS-9", lot: "", chemicalUse: "4", inStock: "", total: ""
-        },
-        {
-            colorCode: "SL92N0", chemicalCode: "F124", name: "SM-acid", lot: "", chemicalUse: "19", inStock: "", total: ""
-        },
-        {
-            colorCode: "SL92N0", chemicalCode: "F126", name: "MTDA", lot: "", chemicalUse: "200", inStock: "", total: ""
-        },
-        {
-            colorCode: "SL92N0", chemicalCode: "F129", name: "DS-100", lot: "", chemicalUse: "1,149", inStock: "", total: ""
-        },
-        {
-            colorCode: "SL92N0", chemicalCode: "T011", name: "FFA", lot: "", chemicalUse: "31", inStock: "", total: ""
-        },
-        {
-            colorCode: "SL92N0", chemicalCode: "T101", name: "Na₂CO₃", lot: "", chemicalUse: "2,090", inStock: "", total: ""
-        },
-        {
-            colorCode: "SL92N0", chemicalCode: "T102", name: "50%NaOH", lot: "", chemicalUse: "150", inStock: "", total: ""
-        },
-        {
-            colorCode: "SL92N0", chemicalCode: "T103", name: "35%HCl", lot: "", chemicalUse: "3,193", inStock: "", total: ""
-        },
-        {
-            colorCode: "SL92N0", chemicalCode: "T082E", name: "Dedusting oil", lot: "", chemicalUse: "25", inStock: "", total: ""
-        }
-    ]);
+    const [data, setData] = useState([]);
     const [filtered, setFiltered] = useState([]);
     const [inventory, setInventory] = useState([]);
     const [showConfirm, setShowConfirm] = useState(false);
     const [inOutValues, setInOutValues] = useState({}); // { idx: { in: value, out: value } }
 
-    const navigate = useNavigate(); // เพิ่มบรรทัดนี้
-
-    // โหลดข้อมูลจาก localStorage เมื่อเปิดหน้า
+    // --- โหลดข้อมูลจาก localStorage เมื่อเปิดหน้า ---
     useEffect(() => {
-        localStorage.removeItem('productplan'); // เพิ่มบรรทัดนี้ชั่วคราว
         const saved = JSON.parse(localStorage.getItem('productplan') || '[]');
         if (saved.length > 0) {
             setData(saved);
         } else {
-            setData([
-                {
-                    colorCode: "SL6200", chemicalCode: "F001", name: "H-acid", lot: "", chemicalUse: "808", inStock: "", total: ""
-                },
-                {
-                    colorCode: "SL6200", chemicalCode: "F002", name: "NaNO2", lot: "", chemicalUse: "565", inStock: "", total: ""
-                },
-                {
-                    colorCode: "SL6200", chemicalCode: "F006", name: "PNA", lot: "", chemicalUse: "363.5", inStock: "", total: ""
-                },
-                {
-                    colorCode: "SL6200", chemicalCode: "F108N", name: "LS-9", lot: "", chemicalUse: "3.5", inStock: "", total: ""
-                },
-                {
-                    colorCode: "SL6200", chemicalCode: "F124", name: "SM-acid", lot: "", chemicalUse: "14", inStock: "", total: ""
-                },
-                {
-                    colorCode: "SL6200", chemicalCode: "F120", name: "Resorcinol", lot: "", chemicalUse: "264.7", inStock: "", total: ""
-                },
-                {
-                    colorCode: "SL6200", chemicalCode: "F129", name: "DS-100", lot: "", chemicalUse: "692.8", inStock: "", total: ""
-                },
-                {
-                    colorCode: "SL6200", chemicalCode: "T001", name: "NaCl", lot: "", chemicalUse: "6,000", inStock: "", total: ""
-                },
-                {
-                    colorCode: "SL6200", chemicalCode: "T011", name: "FFA", lot: "", chemicalUse: "22", inStock: "", total: ""
-                },
-                {
-                    colorCode: "SL6200", chemicalCode: "T101", name: "Na₂CO₃", lot: "", chemicalUse: "1,537.5", inStock: "", total: ""
-                },
-                {
-                    colorCode: "SL6200", chemicalCode: "T103", name: "35%HCl", lot: "", chemicalUse: "3,112", inStock: "", total: ""
-                },
-                // เพิ่มข้อมูล SL92N0
-                {
-                    colorCode: "SL92N0", chemicalCode: "F001", name: "H-acid", lot: "", chemicalUse: "1,308", inStock: "", total: ""
-                },
-                {
-                    colorCode: "SL92N0", chemicalCode: "F002", name: "NaNO₂", lot: "", chemicalUse: "919", inStock: "", total: ""
-                },
-                {
-                    colorCode: "SL92N0", chemicalCode: "F006", name: "PNA", lot: "", chemicalUse: "530", inStock: "", total: ""
-                },
-                {
-                    colorCode: "SL92N0", chemicalCode: "F103", name: "MPDA", lot: "", chemicalUse: "225", inStock: "", total: ""
-                },
-                {
-                    colorCode: "SL92N0", chemicalCode: "F108N", name: "LS-9", lot: "", chemicalUse: "4", inStock: "", total: ""
-                },
-                {
-                    colorCode: "SL92N0", chemicalCode: "F124", name: "SM-acid", lot: "", chemicalUse: "19", inStock: "", total: ""
-                },
-                {
-                    colorCode: "SL92N0", chemicalCode: "F126", name: "MTDA", lot: "", chemicalUse: "200", inStock: "", total: ""
-                },
-                {
-                    colorCode: "SL92N0", chemicalCode: "F129", name: "DS-100", lot: "", chemicalUse: "1,149", inStock: "", total: ""
-                },
-                {
-                    colorCode: "SL92N0", chemicalCode: "T011", name: "FFA", lot: "", chemicalUse: "31", inStock: "", total: ""
-                },
-                {
-                    colorCode: "SL92N0", chemicalCode: "T101", name: "Na₂CO₃", lot: "", chemicalUse: "2,090", inStock: "", total: ""
-                },
-                {
-                    colorCode: "SL92N0", chemicalCode: "T102", name: "50%NaOH", lot: "", chemicalUse: "150", inStock: "", total: ""
-                },
-                {
-                    colorCode: "SL92N0", chemicalCode: "T103", name: "35%HCl", lot: "", chemicalUse: "3,193", inStock: "", total: ""
-                },
-                {
-                    colorCode: "SL92N0", chemicalCode: "T082E", name: "Dedusting oil", lot: "", chemicalUse: "25", inStock: "", total: ""
-                }
-            ]);
+            setData([]);
         }
     }, []);
 
-    // บันทึก data ลง localStorage ทุกครั้งที่ data เปลี่ยน
+    // --- บันทึก data ลง localStorage ทุกครั้งที่ data เปลี่ยน ---
     useEffect(() => {
         localStorage.setItem('productplan', JSON.stringify(data));
     }, [data]);
 
-    // โหลดข้อมูล inventory (RM1.json)
+    // --- โหลดข้อมูล inventory จาก backend ---
     useEffect(() => {
-        fetch("/RM1.json")
-            .then(res => res.json())
-            .then(json => setInventory(json))
+        axios.get('http://localhost:5000/api/rm')
+            .then(res => setInventory(res.data))
             .catch(() => setInventory([]));
     }, []);
 
-    // ฟังก์ชันค้นหา
+    // --- ฟังก์ชันค้นหา ---
     const handleSearch = () => {
         setColorCode(colorCodeInput);
         setLot(lotInput);
-        // ไม่ต้อง setPercent แล้ว
-        const result = data.filter(
-            item => item.colorCode === colorCodeInput
-        );
-        setFiltered(result);
+        setPercent(percentInput);
+        // ไม่ต้อง filter จาก data แล้ว เพราะ filtered จะถูก set จาก useEffect ด้านล่าง
+        // setFiltered(result); // ลบออก
     };
 
-    const today = new Date().toISOString().slice(0, 10);
-
-    // เก็บข้อมูลที่ต้องการจะ submit
-    // const submitData = {
-    //     department,
-    //     colorCode: colorCodeInput,
-    //     lot: lotInput,
-    //     date: dateInput,
-    //     percent: percentInput
-    // };
-
-    // ฟังก์ชันเมื่อกด OK ใน popup
-    const handleConfirmSubmit = () => {
-        // 1. อัปเดต inventory (ถ้ามี)
-        const updatedInventory = inventory.map((invItem) => {
-            const idx = filtered.findIndex(item => item.chemicalCode === invItem.Code);
-            if (idx === -1) return invItem;
-
-            const lotNum = parseFloat(lot) || 0;
-            const chemUseNum = parseFloat((filtered[idx].chemicalUse + '').replace(/,/g, '')) || 0;
-            const percentNum = getAutoPercent();
-            const result = lotNum
-                ? (chemUseNum * lotNum * percentNum / 100)
-                : chemUseNum;
-
-            const balance = parseFloat(invItem["G-total"] || invItem["G-TOTAL"] || 0) || 0;
-            const inValue = parseFloat(inOutValues[idx]?.in) || 0;
-            const outValue = parseFloat(inOutValues[idx]?.out) || 0;
-            const diff = ((balance + inValue) - outValue) - result;
-
-            return {
-                ...invItem,
-                "G-total": balance + diff
-            };
-        });
-
-        setInventory(updatedInventory);
-        localStorage.setItem('RM1.json', JSON.stringify(updatedInventory));
-
-        // 2. เก็บข้อมูล planr-table (เพิ่มตรงนี้!)
-        const planRData = JSON.parse(localStorage.getItem('planr-table') || '[]');
-        planRData.push({
-            department,
-            colorCode: colorCodeInput,
-            lot: lotInput,
-            date: dateInput,
-            percent: getAutoPercent()
-        });
-        localStorage.setItem('planr-table', JSON.stringify(planRData));
-
-        setShowConfirm(false);
-    };
-
-    // ฟังก์ชันเปลี่ยนค่า In/Out
+    // --- ฟังก์ชันเปลี่ยนค่า In/Out ---
     const handleInOutChange = (idx, field, value) => {
         setInOutValues(prev => ({
             ...prev,
@@ -337,140 +61,62 @@ const ProductPlan = () => {
         }));
     };
 
-    // ฟังก์ชันคำนวณ % ผลิตได้สูงสุดจากสารที่ขาดมากที่สุด
-    function calculateMaxPercent(filtered, inventory, lot) {
-        let minPercent = 100;
-        let limitingChemical = null;
-
-        filtered.forEach(item => {
-            const chemUseNum = parseFloat((item.chemicalUse + '').replace(/,/g, '')) || 0;
-            const lotNum = parseFloat(lot) || 0;
-            const need = chemUseNum * lotNum / 100; // คิดเป็น 1% ก่อน
-            const inv = inventory.find(invItem => invItem["Code"] === item.chemicalCode);
-            const balance = inv ? parseFloat(inv["G-total"] || inv["G-TOTAL"] || 0) : 0;
-
-            if (need > 0 && balance > 0 && balance < chemUseNum * lotNum) {
-                // คำนวณ % ที่ผลิตได้จริงจากสารนี้
-                const percent = (balance / (chemUseNum * lotNum)) * 100;
-                if (percent < minPercent) {
-                    minPercent = percent;
-                    limitingChemical = item.chemicalCode;
-                }
-            }
+    // --- ฟังก์ชัน Submit ---
+    const handleConfirmSubmit = () => {
+        // เก็บข้อมูลลง localStorage (เหมือน logic เดิม)
+        const planRData = JSON.parse(localStorage.getItem('planr-table') || '[]');
+        planRData.push({
+            department,
+            colorCode: colorCodeInput,
+            lot: lotInput,
+            date: dateInput,
+            percent: percentInput
         });
+        localStorage.setItem('planr-table', JSON.stringify(planRData));
+        setShowConfirm(false);
+    };
 
-        // ถ้า minPercent < 100 แปลว่ามีสารที่ขาด
-        if (minPercent < 100 && limitingChemical) {
-            return {
-                maxPercent: Math.floor(minPercent * 100) / 100, // ปัดทศนิยม 2 ตำแหน่ง
-                chemical: limitingChemical
-            };
-        }
-        return null;
-    }
-
-    // ฟังก์ชันคำนวณ % ผลิตได้สูงสุดจากสารที่ขาดมากที่สุด (ปรับปรุงใหม่)
-    function calculateMaxPercentByMaxDiff(filtered, inventory, lot) {
-        let limitingChemical = null;
-        let limitingPercent = 100;
-
-        filtered.forEach(item => {
-            const chemUseNum = parseFloat((item.chemicalUse + '').replace(/,/g, '')) || 0;
-            const lotNum = parseFloat(lot) || 0;
-            const need100 = chemUseNum * lotNum;
-            if (need100 === 0) return;
-
-            const inv = inventory.find(invItem => invItem["Code"] === item.chemicalCode);
-            const balance = inv ? parseFloat(inv["G-total"] || inv["G-TOTAL"] || 0) : 0;
-
-            // เลือกตัวที่ balance < need100 (เหลือน้อยกว่าที่ต้องใช้)
-            if (balance < need100) {
-                const percentCanProduce = (balance * 100) / need100;
-                if (percentCanProduce < limitingPercent) {
-                    limitingPercent = percentCanProduce;
-                    limitingChemical = item.chemicalCode;
-                }
-            }
-        });
-
-        if (limitingChemical) {
-            return {
-                maxPercent: Math.floor(limitingPercent * 100) / 100,
-                chemical: limitingChemical
-            };
-        }
-        return null;
-    }
-
-    // ฟังก์ชันคำนวณ % ผลิตได้สูงสุดจากสารที่ขาดมากที่สุด (เลือกตัวที่ขาดมากสุดแต่ balance > 0)
-    function calculateMaxPercentByLargestShortage(filtered, inventory, lot) {
-        let limitingChemical = null;
-        let limitingPercent = 100;
-        let maxShortage = -Infinity;
-
-        filtered.forEach(item => {
-            const chemUseNum = parseFloat((item.chemicalUse + '').replace(/,/g, '')) || 0;
-            const lotNum = parseFloat(lot) || 0;
-            const need = chemUseNum * lotNum;
-            if (need === 0) return;
-
-            const inv = inventory.find(invItem => invItem["Code"] === item.chemicalCode);
-            const balance = inv ? parseFloat(inv["G-total"] || inv["G-TOTAL"] || 0) : 0;
-
-            // เงื่อนไข: balance > 0 และ balance < need (ขาดแต่ไม่เป็น 0)
-            if (balance > 0 && balance < need) {
-                const percentCanProduce = (balance * 100) / need;
-                const shortage = need - balance;
-                // เลือกตัวที่ขาดมากที่สุด
-                if (shortage > maxShortage) {
-                    maxShortage = shortage;
-                    limitingPercent = percentCanProduce;
-                    limitingChemical = item.chemicalCode;
-                }
-            }
-        });
-
-        if (limitingChemical) {
-            return {
-                maxPercent: Math.floor(limitingPercent * 100) / 100,
-                chemical: limitingChemical
-            };
-        }
-        return null;
-    }
-
-    // เพิ่ม useEffect นี้ไว้ใน component ProductPlan
+    // --- โหลดสูตรจาก backend ตาม color code ---
     useEffect(() => {
-        if (showConfirm) {
-            const maxPercentInfo = calculateMaxPercentByMaxDiff(filtered, inventory, lotInput);
-            if (maxPercentInfo && parseFloat(percentInput) > maxPercentInfo.maxPercent) {
-                setPercentInput(maxPercentInfo.maxPercent.toString());
-            }
+        if (colorCodeInput) {
+            axios.get(`http://localhost:5000/api/product-plan/formula/${colorCodeInput}`)
+                .then(res => {
+                    // Map field ให้ตรงกับที่ frontend ใช้
+                    const mapped = (res.data || []).map(item => ({
+                        chemicalCode: item.chemicalCode,
+                        name: item.name,
+                        chemicalUse: item.qtyPerLot,
+                        lot: '',
+                        inStock: '',
+                        total: ''
+                    }));
+                    setFiltered(mapped);
+                })
+                .catch(() => setFiltered([]));
+        } else {
+            setFiltered([]);
         }
-        // eslint-disable-next-line
-    }, [showConfirm]);
+    }, [colorCodeInput]);
 
     return (
         <div className="productplan-bg">
+            {/* Header */}
             <div className="productplan-header">
                 <div style={{ position: "relative" }}>
                     <div className="productplan-title-bg"></div>
                     <div className="productplan-title">Product Plan</div>
                 </div>
                 <div className="productplan-user">
-                    <FaHome
-                        className="icon-home"
-                        onClick={() => navigate('/menu')} // เพิ่ม onClick ตรงนี้
-                        style={{ cursor: "pointer" }}
-                    />
+                    <FaHome className="icon-home" />
                     <span>User Name Lastname</span>
                 </div>
             </div>
+            {/* Toolbar */}
             <div className="productplan-toolbar">
                 <span className="input-label">Department :</span>
                 <select
                     className="input-dropdown"
-                    style={{ marginRight: 8, width: 110, height: 45 }}
+                    style={{ marginRight: 8, width: 100, height: 40 }}
                     value={department}
                     onChange={e => setDepartment(e.target.value)}
                 >
@@ -485,11 +131,11 @@ const ProductPlan = () => {
                     <option value="Pi1">Pi-1</option>
                     <option value="Pi2">Pi-2</option>
                 </select>
-                <span className="input-label">Product code :</span>
+                <span className="input-label">Color code :</span>
                 <input
                     className="input-code"
                     style={{ width: 110 }}
-                    placeholder="enter product code"
+                    placeholder="enter color code"
                     value={colorCodeInput}
                     onChange={e => setColorCodeInput(e.target.value)}
                 />
@@ -503,8 +149,8 @@ const ProductPlan = () => {
                     onChange={e => setLotInput(e.target.value)}
                 />
                 <button className="icon-btn" onClick={() => setLot(lotInput)}><FaCheck /></button>
-                {/* ช่องกรอก % ถูกลบออก */}
-                {/* <div style={{ display: "inline-flex", alignItems: "center" }}>
+                <span className="input-label">% :</span>
+                <div style={{ display: "inline-flex", alignItems: "center" }}>
                     <input
                         className="input-percent"
                         placeholder="%"
@@ -522,17 +168,11 @@ const ProductPlan = () => {
                     </button>
                     <button
                         className="productplan-bottom-btn"
-                        style={{}}
+                        style={{ marginLeft: 8 }}
                     >
                         ปุ่มแคท
                     </button>
-                </div> */}
-                <button
-                    className="productplan-bottom-btn"
-                    style={{ marginLeft: 8 }}
-                >
-                    ปุ่มแคท
-                </button>
+                </div>
                 <div className="toolbar-right">
                     <input
                         className="input-date"
@@ -559,25 +199,26 @@ const ProductPlan = () => {
                     Submit
                 </button>
             </div>
+            {/* Content */}
             <div className="productplan-content-wrapper" style={{ display: "flex", flexDirection: "row", position: "relative" }}>
                 <div className="productplan-content">
                     <div className="productplan-info">
                         <span>Department : {department}</span>
-                        <span>Product code : {colorCode}</span>
+                        <span>Color code : {colorCode}</span>
                         <span>Lot. : {lot}</span>
-                        <span>% : 100</span>
+                        <span>% : {percent}</span>
                     </div>
                     <div className="productplan-table-wrapper">
                         <table className="productplan-table">
                             <thead>
                                 <tr>
-                                    <th>Product code</th>
+                                    <th>Chemical code</th>
                                     <th>Name</th>
                                     <th>Chemical use (kg)</th>
-                                    <th>In (kg)</th>         
-                                    <th>Out (kg)</th>        
-                                    <th>Balance (kg)</th>   
-                                    <th>Diff (kg)</th>       
+                                    <th>In (kg)</th>
+                                    <th>Out (kg)</th>
+                                    <th>Balance (kg)</th>
+                                    <th>Diff (kg)</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -588,22 +229,17 @@ const ProductPlan = () => {
                                     const result = lotNum
                                         ? (chemUseNum * lotNum * percentNum / 100)
                                         : chemUseNum;
-
+                                    // รองรับทั้ง Code/code และ G-TOTAL/g_total
                                     const inv = inventory.find(invItem =>
-                                        invItem["Code"] === item.chemicalCode
+                                        (invItem["Code"] || invItem.code) === item.chemicalCode
                                     );
-                                    const balance = inv ? parseFloat(inv["G-total"] || inv["G-TOTAL"] || 0) : 0;
-
-                                    // ใช้ค่าที่กรอก หรือ 0
+                                    const balance = inv ? parseFloat(inv["G-total"] ?? inv["G-TOTAL"] ?? inv.g_total ?? 0) : 0;
                                     const inValue = parseFloat(inOutValues[idx]?.in) || 0;
                                     const outValue = parseFloat(inOutValues[idx]?.out) || 0;
-
-                                    const updatedBalance = (balance + inValue) - outValue;
-                                    const diff = updatedBalance - result;
-
+                                    const diff = ((balance + inValue) - outValue) - result;
                                     return (
                                         <tr key={idx}>
-                                            <td>{item.chemicalCode}</td> {/* ถ้าต้องการให้แสดง product code จริง ให้ใช้ item.colorCode */}
+                                            <td>{item.chemicalCode}</td>
                                             <td>{item.name}</td>
                                             <td>{result.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
                                             <td>
@@ -626,7 +262,7 @@ const ProductPlan = () => {
                                                     style={{ width: 70 }}
                                                 />
                                             </td>
-                                            <td>{updatedBalance.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
+                                            <td>{balance.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
                                             <td>{diff.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
                                         </tr>
                                     );
@@ -635,7 +271,7 @@ const ProductPlan = () => {
                         </table>
                     </div>
                 </div>
-                {/* กล่องแจ้งเตือน */}
+                {/* Notification Box */}
                 <div className="side-box">
                     <div className="side-box-title">Notification</div>
                     <div className="side-box-scroll">
@@ -646,17 +282,13 @@ const ProductPlan = () => {
                             const result = lotNum
                               ? (chemUseNum * lotNum * percentNum / 100)
                               : chemUseNum;
-
                             const inv = inventory.find(invItem =>
-                              invItem["Code"] === item.chemicalCode
+                              (invItem["Code"] || invItem.code) === item.chemicalCode
                             );
-                            const balance = inv ? parseFloat(inv["G-total"] || inv["G-TOTAL"] || 0) : 0;
-
+                            const balance = inv ? parseFloat(inv["G-total"] ?? inv["G-TOTAL"] ?? inv.g_total ?? 0) : 0;
                             const inValue = parseFloat(inOutValues[idx]?.in) || 0;
                             const outValue = parseFloat(inOutValues[idx]?.out) || 0;
-
                             const diff = ((balance + inValue) - outValue) - result;
-
                             if (diff < 0) {
                               return (
                                 <div key={idx} className="noti-red">
@@ -676,14 +308,15 @@ const ProductPlan = () => {
                         })}
                     </div>
                 </div>
-                {/* ปุ่ม Submit มุมขวาล่าง */}
+                {/* Submit Button & Popup */}
                 <button
                     className="productplan-submit-btn"
                     disabled={
                         !department ||
                         !colorCodeInput ||
                         !lotInput ||
-                        !dateInput // ลบ !percentInput ออก เพราะไม่ต้องกรอก % แล้ว
+                        !percentInput ||
+                        !dateInput
                     }
                     onClick={() => setShowConfirm(true)}
                 >
@@ -697,38 +330,11 @@ const ProductPlan = () => {
                             <h3>ยืนยันข้อมูลก่อนบันทึก</h3>
                             <div className="confirm-list">
                                 <div>Department: <b>{department}</b></div>
-                                <div>Product code: <b>{colorCodeInput}</b></div>
+                                <div>Color code: <b>{colorCodeInput}</b></div>
                                 <div>Lot: <b>{lotInput}</b></div>
-                                <div>%: <b>{getAutoPercent()}</b></div>
+                                <div>%: <b>{percentInput}</b></div>
                                 <div>Date: <b>{dateInput}</b></div>
-                                {/* เพิ่มตรงนี้ */}
-                                {(() => {
-                                    const maxPercentInfo = calculateMaxPercentByMaxDiff(filtered, inventory, lotInput);
-                                    if (maxPercentInfo) {
-                                        return (
-                                            <div style={{color: "#d32f2f", fontWeight: 600, margin: "12px 0"}}>
-                                                สาร <b>{maxPercentInfo.chemical}</b> เป็นตัวจำกัดการผลิต<br />
-                                                สามารถผลิตได้สูงสุดประมาณ <b>{maxPercentInfo.maxPercent}%</b>
-                                                <button
-                                                    style={{
-                                                        marginLeft: 12,
-                                                        padding: "2px 12px",
-                                                        borderRadius: 8,
-                                                        border: "1px solid #67AE6E",
-                                                        background: "#eafbe7",
-                                                        color: "#328E6E",
-                                                        cursor: "pointer"
-                                                    }}
-                                                    onClick={() => setPercentInput(maxPercentInfo.maxPercent)}
-                                                >
-                                                    อัปเดต % ผลิตสูงสุด
-                                                </button>
-                                            </div>
-                                        );
-                                    }
-                                    return null;
-                                })()}
-                                {/* ตาราง In/Out ใน popup */}
+                                {/* เพิ่มตาราง In/Out */}
                                 <div style={{marginTop: 18, marginBottom: 6, fontWeight: 600, color: "#2986cc"}}>In/Out</div>
                                 <table style={{width: "100%", borderCollapse: "collapse", fontSize: "1rem", marginBottom: 8}}>
                                     <thead>
@@ -739,23 +345,18 @@ const ProductPlan = () => {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {filtered.map((item, idx) => {
-                                            // ใช้ค่าที่กรอกจริง (ไม่ default เป็น 0)
-                                            const inValue = inOutValues[idx]?.in !== undefined && inOutValues[idx]?.in !== "" ? parseFloat(inOutValues[idx].in) : null;
-                                            const outValue = inOutValues[idx]?.out !== undefined && inOutValues[idx]?.out !== "" ? parseFloat(inOutValues[idx].out) : null;
-
-                                            // โชว์เฉพาะรายการที่มี in หรือ out (ไม่ใช่ 0/null/ว่าง)
-                                            if ((inValue && inValue !== 0) || (outValue && outValue !== 0)) {
-                                                return (
-                                                    <tr key={idx}>
-                                                        <td style={{textAlign: "center"}}>{item.chemicalCode}</td>
-                                                        <td style={{textAlign: "right"}}>{inValue !== null ? inValue : ""}</td>
-                                                        <td style={{textAlign: "right"}}>{outValue !== null ? outValue : ""}</td>
-                                                    </tr>
-                                                );
-                                            }
-                                            return null;
-                                        })}
+                                        {filtered
+                                          .filter((item, idx) => 
+                                            (parseFloat(inOutValues[idx]?.in) || 0) !== 0 ||
+                                            (parseFloat(inOutValues[idx]?.out) || 0) !== 0
+                                          )
+                                          .map((item, idx) => (
+                                            <tr key={idx}>
+                                              <td style={{textAlign: "center"}}>{item.chemicalCode}</td>
+                                              <td style={{textAlign: "right"}}>{inOutValues[idx]?.in || 0}</td>
+                                              <td style={{textAlign: "right"}}>{inOutValues[idx]?.out || 0}</td>
+                                            </tr>
+                                          ))}
                                     </tbody>
                                 </table>
                             </div>
@@ -767,8 +368,7 @@ const ProductPlan = () => {
                     </div>
                 )}
             </div>
-            </div>
-       
+        </div>
     );
 };
 

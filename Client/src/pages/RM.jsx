@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import './RM.css';
 import { FaHome, FaSearch } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import axios from 'axios';
 
 const RM = () => {
   const navigate = useNavigate();
@@ -10,12 +11,18 @@ const RM = () => {
   const [data, setData] = useState([]);
   const [showResult, setShowResult] = useState(false);
 
-  // โหลดข้อมูลจาก inventory (RM1.json)
+  // เชื่อมต่อ backend ด้วย axios
   useEffect(() => {
-    fetch("/RM1.json")
-      .then((res) => res.json())
-      .then((json) => setData(json))
+    axios.get("http://localhost:5000/api/rm")
+      .then((res) => setData(res.data))
       .catch((err) => setData([]));
+  }, []);
+
+  useEffect(() => {
+    // ลบข้อมูล localStorage ที่เกี่ยวข้องกับ RM/Inventory/ProductPlan เมื่อเข้าเพจนี้
+    localStorage.removeItem('productplan');
+    localStorage.removeItem('planr-table');
+    localStorage.removeItem('RM1.json');
   }, []);
 
   const handleSearchChange = (e) => {
@@ -35,8 +42,8 @@ const RM = () => {
   // ฟิลเตอร์ข้อมูลตาม code ที่ค้นหา (ถ้าไม่กรอกจะแสดงทั้งหมด)
   const filteredData = search
     ? data.filter(item =>
-        item["Code"] &&
-        item["Code"].toLowerCase().includes(search.toLowerCase())
+        (item["Code"] || item.code) &&
+        (item["Code"] || item.code).toLowerCase().includes(search.toLowerCase())
       )
     : [];
 
@@ -87,14 +94,22 @@ const RM = () => {
                   <td
                     style={{
                       background:
-                        search && item["Code"] && item["Code"].toLowerCase().includes(search.toLowerCase())
+                        search && (item["Code"] || item.code) && (item["Code"] || item.code).toLowerCase().includes(search.toLowerCase())
                           ? "#fff9c4"
                           : "transparent"
                     }}
                   >
-                    {item["Code"]}
+                    {item["Code"] || item.code}
                   </td>
-                  <td>{item["G-TOTAL"]}</td>
+                  <td>
+                    {
+                      item["G-TOTAL"] !== undefined && item["G-TOTAL"] !== null
+                        ? Number(item["G-TOTAL"]).toFixed(2)
+                        : item.g_total !== undefined && item.g_total !== null
+                          ? Number(item.g_total).toFixed(2)
+                          : ''
+                    }
+                  </td>
                 </tr>
               ))}
             </tbody>
