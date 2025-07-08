@@ -256,17 +256,22 @@ const ProductPlan = () => {
 
     // โหลดข้อมูล inventory (RM1.json)
     useEffect(() => {
-        fetch("/RM1.json")
-            .then(res => res.json())
-            .then(json => setInventory(json))
-            .catch(() => setInventory([]));
+        const local = localStorage.getItem('RM1.json');
+        if (local) {
+            setInventory(JSON.parse(local));
+        } else {
+            fetch("/RM1.json")
+                .then(res => res.json())
+                .then(json => setInventory(json))
+                .catch(() => setInventory([]));
+        }
     }, []);
 
     // ฟังก์ชันค้นหา
     const handleSearch = () => {
         setColorCode(colorCodeInput);
         setLot(lotInput);
-        // ไม่ต้อง setPercent แล้ว
+        setPercent(percentInput);
         const result = data.filter(
             item => item.colorCode === colorCodeInput
         );
@@ -276,36 +281,32 @@ const ProductPlan = () => {
     const today = new Date().toISOString().slice(0, 10);
 
     // เก็บข้อมูลที่ต้องการจะ submit
-    // const submitData = {
-    //     department,
-    //     colorCode: colorCodeInput,
-    //     lot: lotInput,
-    //     date: dateInput,
-    //     percent: percentInput
-    // };
+    const submitData = {
+        department,
+        colorCode: colorCodeInput,
+        lot: lotInput,
+        date: dateInput,
+        percent: percentInput
+    };
 
     // ฟังก์ชันเมื่อกด OK ใน popup
     const handleConfirmSubmit = () => {
-        // 1. อัปเดต inventory (ถ้ามี)
         const updatedInventory = inventory.map((invItem) => {
             const idx = filtered.findIndex(item => item.chemicalCode === invItem.Code);
             if (idx === -1) return invItem;
 
-            const lotNum = parseFloat(lot) || 0;
-            const chemUseNum = parseFloat((filtered[idx].chemicalUse + '').replace(/,/g, '')) || 0;
-            const percentNum = getAutoPercent();
-            const result = lotNum
-                ? (chemUseNum * lotNum * percentNum / 100)
-                : chemUseNum;
-
-            const balance = parseFloat(invItem["G-total"] || invItem["G-TOTAL"] || 0) || 0;
+            const balance = parseFloat(invItem["G-TOTAL"] ?? invItem["G-total"] ?? 0) || 0;
             const inValue = parseFloat(inOutValues[idx]?.in) || 0;
             const outValue = parseFloat(inOutValues[idx]?.out) || 0;
-            const diff = ((balance + inValue) - outValue) - result;
+            const chemUseNum = parseFloat((filtered[idx].chemicalUse + '').replace(/,/g, '')) || 0;
+
+            // Diff = (Balance - Chemical use) + In - Out
+            const diff = (balance - chemUseNum) + inValue - outValue;
 
             return {
                 ...invItem,
-                "G-total": balance + diff
+                "G-TOTAL": diff,
+                "diff": diff
             };
         });
 
@@ -319,11 +320,23 @@ const ProductPlan = () => {
             colorCode: colorCodeInput,
             lot: lotInput,
             date: dateInput,
-            percent: getAutoPercent()
+            percent: percentInput
         });
         localStorage.setItem('planr-table', JSON.stringify(planRData));
 
         setShowConfirm(false);
+
+        // รีเซ็ตค่าที่กรอกไว้
+        setDepartment('');
+        setColorCodeInput('');
+        setLotInput('');
+        setPercentInput('');
+        setDateInput(today);
+        setColorCode('');
+        setLot('');
+        setPercent('');
+        setFiltered([]);
+        setInOutValues({});
     };
 
     // ฟังก์ชันเปลี่ยนค่า In/Out
@@ -337,117 +350,15 @@ const ProductPlan = () => {
         }));
     };
 
-    // ฟังก์ชันคำนวณ % ผลิตได้สูงสุดจากสารที่ขาดมากที่สุด
-    function calculateMaxPercent(filtered, inventory, lot) {
-        let minPercent = 100;
-        let limitingChemical = null;
-
-        filtered.forEach(item => {
-            const chemUseNum = parseFloat((item.chemicalUse + '').replace(/,/g, '')) || 0;
-            const lotNum = parseFloat(lot) || 0;
-            const need = chemUseNum * lotNum / 100; // คิดเป็น 1% ก่อน
-            const inv = inventory.find(invItem => invItem["Code"] === item.chemicalCode);
-            const balance = inv ? parseFloat(inv["G-total"] || inv["G-TOTAL"] || 0) : 0;
-
-            if (need > 0 && balance > 0 && balance < chemUseNum * lotNum) {
-                // คำนวณ % ที่ผลิตได้จริงจากสารนี้
-                const percent = (balance / (chemUseNum * lotNum)) * 100;
-                if (percent < minPercent) {
-                    minPercent = percent;
-                    limitingChemical = item.chemicalCode;
-                }
-            }
-        });
-
-        // ถ้า minPercent < 100 แปลว่ามีสารที่ขาด
-        if (minPercent < 100 && limitingChemical) {
-            return {
-                maxPercent: Math.floor(minPercent * 100) / 100, // ปัดทศนิยม 2 ตำแหน่ง
-                chemical: limitingChemical
-            };
-        }
-        return null;
-    }
-
-    // ฟังก์ชันคำนวณ % ผลิตได้สูงสุดจากสารที่ขาดมากที่สุด (ปรับปรุงใหม่)
-    function calculateMaxPercentByMaxDiff(filtered, inventory, lot) {
-        let limitingChemical = null;
-        let limitingPercent = 100;
-
-        filtered.forEach(item => {
-            const chemUseNum = parseFloat((item.chemicalUse + '').replace(/,/g, '')) || 0;
-            const lotNum = parseFloat(lot) || 0;
-            const need100 = chemUseNum * lotNum;
-            if (need100 === 0) return;
-
-            const inv = inventory.find(invItem => invItem["Code"] === item.chemicalCode);
-            const balance = inv ? parseFloat(inv["G-total"] || inv["G-TOTAL"] || 0) : 0;
-
-            // เลือกตัวที่ balance < need100 (เหลือน้อยกว่าที่ต้องใช้)
-            if (balance < need100) {
-                const percentCanProduce = (balance * 100) / need100;
-                if (percentCanProduce < limitingPercent) {
-                    limitingPercent = percentCanProduce;
-                    limitingChemical = item.chemicalCode;
-                }
-            }
-        });
-
-        if (limitingChemical) {
-            return {
-                maxPercent: Math.floor(limitingPercent * 100) / 100,
-                chemical: limitingChemical
-            };
-        }
-        return null;
-    }
-
-    // ฟังก์ชันคำนวณ % ผลิตได้สูงสุดจากสารที่ขาดมากที่สุด (เลือกตัวที่ขาดมากสุดแต่ balance > 0)
-    function calculateMaxPercentByLargestShortage(filtered, inventory, lot) {
-        let limitingChemical = null;
-        let limitingPercent = 100;
-        let maxShortage = -Infinity;
-
-        filtered.forEach(item => {
-            const chemUseNum = parseFloat((item.chemicalUse + '').replace(/,/g, '')) || 0;
-            const lotNum = parseFloat(lot) || 0;
-            const need = chemUseNum * lotNum;
-            if (need === 0) return;
-
-            const inv = inventory.find(invItem => invItem["Code"] === item.chemicalCode);
-            const balance = inv ? parseFloat(inv["G-total"] || inv["G-TOTAL"] || 0) : 0;
-
-            // เงื่อนไข: balance > 0 และ balance < need (ขาดแต่ไม่เป็น 0)
-            if (balance > 0 && balance < need) {
-                const percentCanProduce = (balance * 100) / need;
-                const shortage = need - balance;
-                // เลือกตัวที่ขาดมากที่สุด
-                if (shortage > maxShortage) {
-                    maxShortage = shortage;
-                    limitingPercent = percentCanProduce;
-                    limitingChemical = item.chemicalCode;
-                }
-            }
-        });
-
-        if (limitingChemical) {
-            return {
-                maxPercent: Math.floor(limitingPercent * 100) / 100,
-                chemical: limitingChemical
-            };
-        }
-        return null;
-    }
-
-    // เพิ่ม useEffect นี้ไว้ใน component ProductPlan
+    // โหลด inventory ใหม่ทุกครั้งที่ showConfirm เปลี่ยน (หลัง submit)
     useEffect(() => {
-        if (showConfirm) {
-            const maxPercentInfo = calculateMaxPercentByMaxDiff(filtered, inventory, lotInput);
-            if (maxPercentInfo && parseFloat(percentInput) > maxPercentInfo.maxPercent) {
-                setPercentInput(maxPercentInfo.maxPercent.toString());
+        // โหลด inventory ใหม่ทุกครั้งที่ showConfirm เปลี่ยน (หลัง submit)
+        if (!showConfirm) {
+            const local = localStorage.getItem('RM1.json');
+            if (local) {
+                setInventory(JSON.parse(local));
             }
         }
-        // eslint-disable-next-line
     }, [showConfirm]);
 
     return (
@@ -503,8 +414,8 @@ const ProductPlan = () => {
                     onChange={e => setLotInput(e.target.value)}
                 />
                 <button className="icon-btn" onClick={() => setLot(lotInput)}><FaCheck /></button>
-                {/* ช่องกรอก % ถูกลบออก */}
-                {/* <div style={{ display: "inline-flex", alignItems: "center" }}>
+                <span className="input-label">% :</span>
+                <div style={{ display: "inline-flex", alignItems: "center" }}>
                     <input
                         className="input-percent"
                         placeholder="%"
@@ -520,19 +431,16 @@ const ProductPlan = () => {
                     >
                         <FaCheck />
                     </button>
+                    {/* ปุ่มที่ย้ายมา */}
+                    {/* ปุ่มแคท */}
                     <button
                         className="productplan-bottom-btn"
-                        style={{}}
+                        style={{
+                        }}
                     >
                         ปุ่มแคท
                     </button>
-                </div> */}
-                <button
-                    className="productplan-bottom-btn"
-                    style={{ marginLeft: 8 }}
-                >
-                    ปุ่มแคท
-                </button>
+                </div>
                 <div className="toolbar-right">
                     <input
                         className="input-date"
@@ -554,9 +462,20 @@ const ProductPlan = () => {
                         fontSize: 18,
                         cursor: "pointer"
                     }}
-                    onClick={() => setShowConfirm(true)}
+                    onClick={() => {
+                        // เก็บข้อมูลลง localStorage
+                        const planRData = JSON.parse(localStorage.getItem('planr-table') || '[]');
+                        planRData.push({
+                            department,
+                            colorCode: colorCodeInput,
+                            lot: lotInput,
+                            date: dateInput,
+                            percent: percentInput
+                        });
+                        localStorage.setItem('planr-table', JSON.stringify(planRData));
+                        // reset input ถ้าต้องการ
+                    }}
                 >
-                    Submit
                 </button>
             </div>
             <div className="productplan-content-wrapper" style={{ display: "flex", flexDirection: "row", position: "relative" }}>
@@ -565,7 +484,7 @@ const ProductPlan = () => {
                         <span>Department : {department}</span>
                         <span>Product code : {colorCode}</span>
                         <span>Lot. : {lot}</span>
-                        <span>% : 100</span>
+                        <span>% : {percent}</span>
                     </div>
                     <div className="productplan-table-wrapper">
                         <table className="productplan-table">
@@ -582,30 +501,24 @@ const ProductPlan = () => {
                             </thead>
                             <tbody>
                                 {filtered.map((item, idx) => {
-                                    const lotNum = parseFloat(lot) || 0;
-                                    const chemUseNum = parseFloat((item.chemicalUse + '').replace(/,/g, '')) || 0;
-                                    const percentNum = parseFloat(percent) || 100;
-                                    const result = lotNum
-                                        ? (chemUseNum * lotNum * percentNum / 100)
-                                        : chemUseNum;
-
+                                    // ดึง balance ล่าสุดจาก inventory
                                     const inv = inventory.find(invItem =>
                                         invItem["Code"] === item.chemicalCode
                                     );
-                                    const balance = inv ? parseFloat(inv["G-total"] || inv["G-TOTAL"] || 0) : 0;
+                                    const balance = inv ? parseFloat(inv["G-TOTAL"] ?? inv["G-total"] ?? 0) : 0;
 
-                                    // ใช้ค่าที่กรอก หรือ 0
                                     const inValue = parseFloat(inOutValues[idx]?.in) || 0;
                                     const outValue = parseFloat(inOutValues[idx]?.out) || 0;
+                                    const chemUseNum = parseFloat((item.chemicalUse + '').replace(/,/g, '')) || 0;
 
-                                    const updatedBalance = (balance + inValue) - outValue;
-                                    const diff = updatedBalance - result;
+                                    // Diff = (Balance - Chemical use) + In - Out
+                                    const diff = (balance - chemUseNum) + inValue - outValue;
 
                                     return (
                                         <tr key={idx}>
-                                            <td>{item.chemicalCode}</td> {/* ถ้าต้องการให้แสดง product code จริง ให้ใช้ item.colorCode */}
+                                            <td>{item.chemicalCode}</td>
                                             <td>{item.name}</td>
-                                            <td>{result.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
+                                            <td>{chemUseNum.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
                                             <td>
                                                 <input
                                                     type="number"
@@ -626,7 +539,7 @@ const ProductPlan = () => {
                                                     style={{ width: 70 }}
                                                 />
                                             </td>
-                                            <td>{updatedBalance.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
+                                            <td>{balance.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
                                             <td>{diff.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
                                         </tr>
                                     );
@@ -643,34 +556,45 @@ const ProductPlan = () => {
                             const lotNum = parseFloat(lot) || 0;
                             const chemUseNum = parseFloat((item.chemicalUse + '').replace(/,/g, '')) || 0;
                             const percentNum = parseFloat(percent) || 100;
-                            const result = lotNum
-                              ? (chemUseNum * lotNum * percentNum / 100)
-                              : chemUseNum;
+                            const result = lotNum ? (chemUseNum * lotNum * percentNum / 100) : chemUseNum;
 
                             const inv = inventory.find(invItem =>
-                              invItem["Code"] === item.chemicalCode
+                                invItem["Code"] === item.chemicalCode
                             );
-                            const balance = inv ? parseFloat(inv["G-total"] || inv["G-TOTAL"] || 0) : 0;
+                            const balance = inv ? parseFloat(inv["G-TOTAL"] ?? inv["G-total"] ?? 0) : 0;
 
                             const inValue = parseFloat(inOutValues[idx]?.in) || 0;
                             const outValue = parseFloat(inOutValues[idx]?.out) || 0;
 
-                            const diff = ((balance + inValue) - outValue) - result;
+                            const updatedBalance = (balance + inValue) - outValue;
+                            const diff = updatedBalance - result;
 
-                            if (diff < 0) {
-                              return (
-                                <div key={idx} className="noti-red">
-                                  <b>{item.chemicalCode}</b> : Balance เหลือไม่พอสำหรับ Chemical use  <br />
-                                  <span style={{fontWeight:400}}>Diff = {diff.toLocaleString(undefined, { maximumFractionDigits: 2 })} kg</span>
-                                </div>
-                              );
-                            } else if (diff < 100) {
-                              return (
-                                <div key={idx} className="noti-yellow">
-                                  <b>{item.chemicalCode}</b> : Balance stock คงเหลือน้อยกว่า 100 kg<br />
-                                  <span style={{fontWeight:400}}>Diff = {diff.toLocaleString(undefined, { maximumFractionDigits: 2 })} kg</span>
-                                </div>
-                              );
+                            // 1. balance = 0 และ diff < 0
+                            if (updatedBalance === 0 && diff < 0) {
+                                return (
+                                    <div key={idx} className="noti-red">
+                                        <b>{item.chemicalCode}</b> : ไม่มีเคมีคงเหลือ ไม่สามารถทำการผลิตได้<br />
+                                        <span style={{ fontWeight: 400 }}>Diff = {diff.toLocaleString(undefined, { maximumFractionDigits: 2 })} kg</span>
+                                    </div>
+                                );
+                            }
+                            // 2. 0 < balance < chemical used
+                            else if (updatedBalance > 0 && updatedBalance < result) {
+                                return (
+                                    <div key={idx} className="noti-yellow">
+                                        <b>{item.chemicalCode}</b> : ผลิตได้ไม่ถึง 100% ของ formula<br />
+                                        <span style={{ fontWeight: 400 }}>Diff = {diff.toLocaleString(undefined, { maximumFractionDigits: 2 })} kg</span>
+                                    </div>
+                                );
+                            }
+                            // 3. balance > chemical used และ diff < 100
+                            else if (updatedBalance >= result && diff < 100) {
+                                return (
+                                    <div key={idx} className="noti-green">
+                                        <b>{item.chemicalCode}</b> : เคมีตัวนี้เพียงพอต่อการผลิตแต่คงเหลือน้อยกว่า 100kg<br />
+                                        <span style={{ fontWeight: 400 }}>Diff = {diff.toLocaleString(undefined, { maximumFractionDigits: 2 })} kg</span>
+                                    </div>
+                                );
                             }
                             return null;
                         })}
@@ -683,7 +607,8 @@ const ProductPlan = () => {
                         !department ||
                         !colorCodeInput ||
                         !lotInput ||
-                        !dateInput // ลบ !percentInput ออก เพราะไม่ต้องกรอก % แล้ว
+                        !percentInput ||
+                        !dateInput
                     }
                     onClick={() => setShowConfirm(true)}
                 >
@@ -697,38 +622,12 @@ const ProductPlan = () => {
                             <h3>ยืนยันข้อมูลก่อนบันทึก</h3>
                             <div className="confirm-list">
                                 <div>Department: <b>{department}</b></div>
-                                <div>Product code: <b>{colorCodeInput}</b></div>
+                                <div>Color code: <b>{colorCodeInput}</b></div>
                                 <div>Lot: <b>{lotInput}</b></div>
-                                <div>%: <b>{getAutoPercent()}</b></div>
+                                <div>%: <b>{percentInput}</b></div>
                                 <div>Date: <b>{dateInput}</b></div>
-                                {/* เพิ่มตรงนี้ */}
-                                {(() => {
-                                    const maxPercentInfo = calculateMaxPercentByMaxDiff(filtered, inventory, lotInput);
-                                    if (maxPercentInfo) {
-                                        return (
-                                            <div style={{color: "#d32f2f", fontWeight: 600, margin: "12px 0"}}>
-                                                สาร <b>{maxPercentInfo.chemical}</b> เป็นตัวจำกัดการผลิต<br />
-                                                สามารถผลิตได้สูงสุดประมาณ <b>{maxPercentInfo.maxPercent}%</b>
-                                                <button
-                                                    style={{
-                                                        marginLeft: 12,
-                                                        padding: "2px 12px",
-                                                        borderRadius: 8,
-                                                        border: "1px solid #67AE6E",
-                                                        background: "#eafbe7",
-                                                        color: "#328E6E",
-                                                        cursor: "pointer"
-                                                    }}
-                                                    onClick={() => setPercentInput(maxPercentInfo.maxPercent)}
-                                                >
-                                                    อัปเดต % ผลิตสูงสุด
-                                                </button>
-                                            </div>
-                                        );
-                                    }
-                                    return null;
-                                })()}
-                                {/* ตาราง In/Out ใน popup */}
+                                <div>Product code: <b>{colorCodeInput}</b></div>
+                                {/* เพิ่มตาราง In/Out */}
                                 <div style={{marginTop: 18, marginBottom: 6, fontWeight: 600, color: "#2986cc"}}>In/Out</div>
                                 <table style={{width: "100%", borderCollapse: "collapse", fontSize: "1rem", marginBottom: 8}}>
                                     <thead>
@@ -739,23 +638,18 @@ const ProductPlan = () => {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {filtered.map((item, idx) => {
-                                            // ใช้ค่าที่กรอกจริง (ไม่ default เป็น 0)
-                                            const inValue = inOutValues[idx]?.in !== undefined && inOutValues[idx]?.in !== "" ? parseFloat(inOutValues[idx].in) : null;
-                                            const outValue = inOutValues[idx]?.out !== undefined && inOutValues[idx]?.out !== "" ? parseFloat(inOutValues[idx].out) : null;
-
-                                            // โชว์เฉพาะรายการที่มี in หรือ out (ไม่ใช่ 0/null/ว่าง)
-                                            if ((inValue && inValue !== 0) || (outValue && outValue !== 0)) {
-                                                return (
-                                                    <tr key={idx}>
-                                                        <td style={{textAlign: "center"}}>{item.chemicalCode}</td>
-                                                        <td style={{textAlign: "right"}}>{inValue !== null ? inValue : ""}</td>
-                                                        <td style={{textAlign: "right"}}>{outValue !== null ? outValue : ""}</td>
-                                                    </tr>
-                                                );
-                                            }
-                                            return null;
-                                        })}
+                                        {filtered
+                                          .filter((item, idx) => 
+                                            (parseFloat(inOutValues[idx]?.in) || 0) !== 0 ||
+                                            (parseFloat(inOutValues[idx]?.out) || 0) !== 0
+                                          )
+                                          .map((item, idx) => (
+                                            <tr key={idx}>
+                                              <td style={{textAlign: "center"}}>{item.chemicalCode}</td>
+                                              <td style={{textAlign: "right"}}>{inOutValues[idx]?.in || 0}</td>
+                                              <td style={{textAlign: "right"}}>{inOutValues[idx]?.out || 0}</td>
+                                            </tr>
+                                          ))}
                                     </tbody>
                                 </table>
                             </div>
@@ -767,8 +661,7 @@ const ProductPlan = () => {
                     </div>
                 )}
             </div>
-            </div>
-       
+        </div>
     );
 };
 

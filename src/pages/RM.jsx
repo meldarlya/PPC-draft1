@@ -12,10 +12,16 @@ const RM = () => {
 
   // โหลดข้อมูลจาก inventory (RM1.json)
   useEffect(() => {
-    fetch("/RM1.json")
-      .then((res) => res.json())
-      .then((json) => setData(json))
-      .catch((err) => setData([]));
+    // ถ้ามีใน localStorage ให้ใช้ข้อมูลล่าสุด
+    const local = localStorage.getItem('RM1.json');
+    if (local) {
+      setData(JSON.parse(local));
+    } else {
+      fetch("/RM1.json")
+        .then((res) => res.json())
+        .then((json) => setData(json))
+        .catch((err) => setData([]));
+    }
   }, []);
 
   const handleSearchChange = (e) => {
@@ -38,7 +44,7 @@ const RM = () => {
         item["Code"] &&
         item["Code"].toLowerCase().includes(search.toLowerCase())
       )
-    : [];
+    : data;
 
   return (
     <div className="rm-container">
@@ -59,47 +65,58 @@ const RM = () => {
       <div className="rm-title">RM Stock</div>
       <div className="rm-username">User Name Lastname</div>
       <div className="rm-main-bg" />
-      <div className="rm-main-inner-bg" />
-      <div className="rm-inventory-btn" onClick={handleInventoryClick}>
-        <span className="rm-inventory-text">Inventory</span>
+      <div className="rm-main-inner-bg">
+        <div className="rm-table-bg">
+          <div className="rm-table-scroll">
+            <table className="rm-table">
+              <thead>
+                <tr>
+                  <th>Chemical code</th>
+                  <th>G-total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(search ? filteredData : data).map((item, idx) => (
+                  <tr key={idx}>
+                    <td
+                      style={{
+                        background:
+                          search && item["Code"] && item["Code"].toLowerCase().includes(search.toLowerCase())
+                            ? "#fff9c4"
+                            : "transparent"
+                      }}
+                    >
+                      {item["Code"]}
+                    </td>
+                    <td>
+                      {item["G-TOTAL"] !== undefined && item["G-TOTAL"] !== null
+                        ? Number(item["G-TOTAL"]).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                        : ""}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div className="rm-alert-list">
+          {(search ? filteredData : data)
+            .filter(item => Number(item["G-TOTAL"]) === 0)
+            .map((item, idx) => (
+              <div key={idx} className="rm-alert-red">
+                <span className="alert-icon">🚨</span>
+                <b>{item["Code"]}</b> : สารนี้คงเหลือ 0
+              </div>
+            ))}
+        </div>
       </div>
-      <div className="rm-label-code">Chemical code :</div>
-      <div className="rm-label-total">G-total :</div>
+
       <div className="rm-home-icon">
         <FaHome
           className="rm-icon-home"
           style={{ cursor: "pointer" }}
           onClick={() => navigate("/menu")}
         />
-      </div>
-      <div className="rm-table-bg">
-        <div className="rm-table-scroll">
-          <table className="rm-table">
-            <thead>
-              <tr>
-                <th>Chemical code</th>
-                <th>G-total</th>
-              </tr>
-            </thead>
-            <tbody>
-              {showResult && filteredData.map((item, idx) => (
-                <tr key={idx}>
-                  <td
-                    style={{
-                      background:
-                        search && item["Code"] && item["Code"].toLowerCase().includes(search.toLowerCase())
-                          ? "#fff9c4"
-                          : "transparent"
-                    }}
-                  >
-                    {item["Code"]}
-                  </td>
-                  <td>{item["G-TOTAL"]}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
       </div>
     </div>
   );
