@@ -5,7 +5,6 @@ import Menu from './components/menu';
 import ProductPlan from './pages/productplan'; 
 import PlanR from './pages/PlanR'; 
 import RM from './pages/RM';
-import Inventory from './pages/inventory';
 import './App.css';
 
 function App() {
@@ -16,9 +15,7 @@ function App() {
         <Route path="/menu" element={<Menu />} />
         <Route path="/productplan" element={<ProductPlan />} />
         <Route path="/planr" element={<PlanR />} />
-        <Route path="/rm" element={<RM />} />
-        <Route path="/inventory" element={<Inventory />} />
-      </Routes>
+        <Route path="/rm" element={<RM />} />  </Routes>
     </Router>
   );
 }
