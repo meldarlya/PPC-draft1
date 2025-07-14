@@ -49,6 +49,8 @@ const RM = () => {
       {/* ช่อง input สำหรับค้นหา */}
       <form className="rm-search-group" onSubmit={handleSearch}>
         <input
+          id="rm-search"
+          name="rm-search"
           className="rm-search-input"
           type="text"
           placeholder="enter chem code"

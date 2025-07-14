@@ -19,23 +19,14 @@ const Formula = () => {
     chemicalUse: ""
   });
 
-  useEffect(() => {
-    const localData = localStorage.getItem("productplan");
-    if (localData) {
-      setData(JSON.parse(localData));
-    } else {
-      setData([]);
-    }
-  }, []);
 
-  // อัปเดต localStorage ทุกครั้งที่ data เปลี่ยน
-  useEffect(() => {
-    localStorage.setItem("productplan", JSON.stringify(data));
-  }, [data]);
+  // โหลดสูตรจาก backend เฉพาะเมื่อค้นหา (ไม่ sync localStorage)
 
+
+  // ค้นหาสูตร (โหลดจาก backend เฉพาะสูตร ไม่ยุ่งกับ Rawmat)
   const handleSearch = async () => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/product-plan/formula/${search}`);
+      const res = await axios.get(`/api/product-plan/formula/${search}`);
       setData(res.data);
       setShowTable(true);
     } catch (err) {
@@ -44,25 +35,26 @@ const Formula = () => {
     }
   };
 
-  const filteredChemicals = showTable && search
-    ? data.filter(item =>
-        item.colorCode &&
-        item.colorCode.toLowerCase().includes(search.toLowerCase())
-      )
-    : [];
+  // ไม่ต้อง filter ซ้ำ เพราะ backend ส่งเฉพาะสูตรที่ค้นหาแล้ว
+  const filteredChemicals = showTable ? data : [];
 
-  // ลบข้อมูล
-  const handleDelete = (idx) => {
-    const filtered = data.filter(item =>
-      item.colorCode &&
-      item.colorCode.toLowerCase().includes(search.toLowerCase())
-    );
-    const itemToDelete = filtered[idx];
-    const newData = data.filter(item => item !== itemToDelete);
-    setData(newData);
+
+  // ลบสารออกจากสูตร (ลบเฉพาะในตารางสูตร ไม่ยุ่งกับ Rawmat)
+  const handleDelete = async (chemicalCode) => {
+    if (!search || !chemicalCode) return;
+    if (!window.confirm('ยืนยันการลบสารนี้ออกจากสูตร?')) return;
+    try {
+      await axios.delete('/api/product-plan/formula', {
+        data: { colorCode: search, chemicalCode }
+      });
+      handleSearch(); // โหลดข้อมูลใหม่หลังลบ
+    } catch (err) {
+      alert('เกิดข้อผิดพลาดในการลบ: ' + (err.response?.data?.error || err.message));
+    }
   };
 
-  // เพิ่มข้อมูล
+
+  // เพิ่มสารเข้าในสูตร (ไม่ต้องเช็คว่ามีใน Rawmat หรือไม่)
   const handleAdd = async () => {
     if (
       search &&
@@ -71,14 +63,12 @@ const Formula = () => {
       newChemical.chemicalUse
     ) {
       try {
-        // เรียก backend เพื่อเพิ่มสูตรและ RM
-        await axios.post("http://localhost:5000/api/product-plan/formula", {
+        await axios.post("/api/product-plan/formula", {
           colorCode: search,
           chemicalCode: newChemical.chemicalCode,
           name: newChemical.name,
           chemicalUse: newChemical.chemicalUse
         });
-        // โหลดข้อมูลใหม่หลังเพิ่ม
         handleSearch();
         setNewChemical({
           colorCode: "",
@@ -98,6 +88,8 @@ const Formula = () => {
       {/* ช่อง input สำหรับค้นหา */}
       <div className="fml-search-group">
         <input
+          id="formula-search"
+          name="formula-search"
           className="fml-search-input"
           type="text"
           placeholder="enter formula code"
@@ -141,6 +133,8 @@ const Formula = () => {
                     <td>
                       <input
                         type="text"
+                        id="chemicalCode"
+                        name="chemicalCode"
                         placeholder="chemicalCode"
                         value={newChemical.chemicalCode}
                         onChange={e => setNewChemical({ ...newChemical, chemicalCode: e.target.value })}
@@ -150,6 +144,8 @@ const Formula = () => {
                     <td>
                       <input
                         type="text"
+                        id="chemicalName"
+                        name="chemicalName"
                         placeholder="name"
                         value={newChemical.name}
                         onChange={e => setNewChemical({ ...newChemical, name: e.target.value })}
@@ -159,6 +155,8 @@ const Formula = () => {
                     <td>
                       <input
                         type="text"
+                        id="chemicalUse"
+                        name="chemicalUse"
                         placeholder="use"
                         value={newChemical.chemicalUse}
                         onChange={e => setNewChemical({ ...newChemical, chemicalUse: e.target.value })}
@@ -197,8 +195,7 @@ const Formula = () => {
                                   color: "#e53935",
                                   cursor: "pointer"
                                 }}
-                                // TODO: เพิ่มฟังก์ชันลบสูตร (เรียก backend)
-                                // onClick={() => handleDelete(idx)}
+                                onClick={() => handleDelete(item.chemicalCode)}
                                 title="ลบ"
                               >
                                 <FaTrash />
