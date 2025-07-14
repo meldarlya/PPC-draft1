@@ -5,6 +5,7 @@ import Menu from './components/menu';
 import ProductPlan from './pages/productplan'; 
 import PlanR from './pages/PlanR'; 
 import RM from './pages/RM';
+import Formula from './pages/formula'; 
 import './App.css';
 
 function App() {
@@ -15,7 +16,9 @@ function App() {
         <Route path="/menu" element={<Menu />} />
         <Route path="/productplan" element={<ProductPlan />} />
         <Route path="/planr" element={<PlanR />} />
-        <Route path="/rm" element={<RM />} />  </Routes>
+        <Route path="/rm" element={<RM />} />
+        <Route path="/formula" element={<Formula />} />
+      </Routes>
     </Router>
   );
 }
