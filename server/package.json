@@ -12,7 +12,7 @@
   "description": "",
   "dependencies": {
     "@prisma/client": "^6.10.1",
-    "prisma": "^6.10.1",
+    "prisma": "^6.11.1",
     "slsx": "^0.0.3",
     "xlsx": "^0.18.5"
   },

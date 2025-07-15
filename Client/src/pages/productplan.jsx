@@ -172,7 +172,7 @@ const ProductPlan = () => {
                     </button>
                     <button
                         className="productplan-bottom-btn"
-                        style={{ marginLeft: 165 }}
+                        style={{ marginLeft: 8 }}
                     >
                         ปุ่มแคท
                     </button>
