@@ -1,0 +1,956 @@
+/* ปรับตาม JSX ของหน้า Formula */
+
+body, html {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.fml-container {
+  position: relative;
+  min-height: 100vh;
+  font-family: 'Inter', sans-serif;
+}
+
+.fml-bg {
+  position: fixed;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+  top: 0;
+  left: 0;
+  background: #a4dfff;
+}
+
+.fml-title {
+  position: absolute;
+  left: 80px;
+  top: 35px;
+  color: #2D85C5;
+  font-size: 32px;
+  font-weight: 600;
+  text-shadow: 0px 2px 2px rgba(0,0,0,0.25);
+  z-index: 2;
+}
+
+.fml-username {
+  position: absolute;
+  right: 40px;
+  top: 34px;
+  color: #2D85C5;
+  font-size: 18px;
+  font-weight: 600;
+  text-shadow: 0px 2px 2px rgba(0,0,0,0.25);
+  white-space: nowrap;
+  z-index: 3;
+}
+
+.fml-main-bg {
+  width: 1350px;
+  height: 620px;
+  left: 80px;
+  top: 100px;
+  position: absolute;
+  background: rgba(255,255,255,0.7);
+  border-radius: 20px;
+  z-index: 1;
+}
+
+.fml-main-inner-bg {
+  width: 1320px;
+  height: 590px;
+  left: 95px;
+  top: 115px;
+  position: absolute;
+  background: #fff;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 0;
+  z-index: 2;
+}
+
+.fml-search-group {
+  display: flex;
+  align-items: center;
+  gap: 0; /* ไม่มีช่องว่างระหว่างกล่องค้นหาและปุ่ม */
+  margin-bottom: 18px;
+}
+
+.fml-search-group {
+  position: absolute;
+  left: 220px;
+  top: 35px;
+  display: flex;
+  align-items: center;
+  z-index: 10;
+  background: none;
+  border-radius: 13px;
+  box-shadow: 0 2px 8px #b3e0ff55;
+  padding: 0 8px 0 0;
+}
+
+/* กลุ่มช่องค้นหา prefix + code */
+.fml-search-prefix-group {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(90deg, #e3f2fd 0%, #fafdff 100%);
+  border: 2px solid #61bdee;
+  border-radius: 18px;
+  box-shadow: 0 4px 16px #b3e0ff33;
+  height: 46px;
+  min-width: 260px;
+  margin-right: 12px;
+  transition: box-shadow 0.2s, border-color 0.2s;
+  overflow: hidden;
+}
+
+/* ช่อง select prefix */
+.fml-search-prefix {
+  border: none;
+  background: transparent;
+  color: #2986cc;
+  font-size: 1.08rem;
+  height: 46px;
+  padding: 0 18px;
+  border-radius: 18px 0 0 18px;
+  outline: none;
+  min-width: 90px;
+  cursor: pointer;
+  appearance: none;
+  border-right: 2px solid #61bdee;
+  transition: background 0.2s;
+}
+
+/* ช่อง input code */
+.fml-search-input {
+  border: none;
+  background: transparent;
+  font-size: 1.08rem;
+  color: #2986cc;
+  height: 46px;
+  padding: 0 18px;
+  outline: none;
+  min-width: 120px;
+  flex: 1;
+  border-radius: 0 18px 18px 0;
+  box-shadow: none;
+  transition: background 0.2s;
+}
+
+/* เมื่อ focus หรือ hover */
+.fml-search-prefix-group:focus-within {
+  border-color: #2986cc;
+  box-shadow: 0 6px 24px #2986cc33;
+  background: linear-gradient(90deg, #e3f2fd 0%, #eaf6ff 100%);
+}
+.fml-search-prefix:focus,
+.fml-search-input:focus {
+  background: #e3f2fd;
+}
+.fml-search-prefix:hover,
+.fml-search-input:hover {
+  background: #f0f7ff;
+}
+
+.fml-search-btn {
+  height: 46px;
+  width: 46px;
+  background: #61bdee;
+  border: none;
+  border-radius: 0 18px 18px 0;
+  margin-left: -55px; /* ให้ขอบติดกันสนิท */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 22px;
+  box-shadow: 0 2px 8px #b3e0ff33;
+  transition: background 0.2s;
+  cursor: pointer;
+}
+
+.fml-search-btn:hover {
+  background: #2986cc;
+}
+
+.fml-search-btn:disabled {
+  background: #e0e0e0;
+  color: #bbb;
+  cursor: not-allowed;
+}
+
+.fml-table-bg {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.fml-table-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: 220px;
+  overflow-y: auto;
+  background: #fafdff;
+  border-radius: 14px;
+  box-shadow: 0 2px 12px #b3e0ff22;
+  padding: 0;
+  position: relative;
+}
+
+/* ปรับขนาด .fml-table-bg ให้เต็ม modal และไม่มี padding */
+.fml-modal-bg .fml-table-bg {
+  flex: 1 1 auto;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border-radius: 0 0 20px 20px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0; /* สำคัญสำหรับ flexbox */
+}
+
+/* ปรับขนาด .fml-table-scroll ให้สูงขึ้นและเต็มพื้นที่ */
+.fml-modal-bg .fml-table-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: 50vh;      /* ปรับตามต้องการ */
+  overflow-y: auto;
+  border-radius: 0 0 20px 20px;
+  background: #fafdff;
+  position: relative;
+  box-shadow: 0 2px 12px #b3e0ff22;
+  padding: 0;
+}
+
+/* ปรับ .fml-table ให้กว้างเต็มพื้นที่ */
+.fml-modal-bg .fml-table {
+  width: 100%;
+  min-width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 1.08rem;
+  position: relative;
+}
+
+/* Sticky header สำหรับตารางหลัก */
+.fml-table th {
+  background: #e6f2ff;
+  color: #2986cc;
+  font-weight: 600;
+  font-size: 1.08rem;
+  border-top: none;
+  border-bottom: 3px solid #b3e0ff;
+  position: static;
+  box-shadow: none;
+  z-index: 1;
+}
+
+.fml-table td, .fml-table th {
+  padding: 10px 0;
+  text-align: center;
+  border-bottom: 2px solid #e6f2ff;
+  min-width: 120px;
+  box-sizing: border-box;
+  background: #fafdff;
+}
+
+.fml-table tr:last-child td {
+  border-bottom: none;
+}
+
+.fml-table input[type="text"] {
+  border: 1.5px solid #61bdee;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 1rem;
+  width: 90%;
+  background: #fafdff;
+  transition: border 0.2s, box-shadow 0.2s;
+  box-shadow: 0 1px 4px #b3e0ff22;
+  outline: none;
+}
+
+.fml-table input[type="text"]:focus {
+  border: 1.5px solid #2986cc;
+  background: #eaf5ff;
+  box-shadow: 0 2px 8px #b3e0ff44;
+}
+
+.fml-table td:last-child input[type="text"] {
+  width: 70px;
+}
+
+/* เพิ่ม margin ให้ input กับปุ่ม + ไม่ติดกัน */
+.fml-table td:last-child {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+/* ปรับปุ่ม + ให้ดูเด่นขึ้น */
+.fml-table button[title="เพิ่ม"] {
+  background: #61bdee;
+  color: #fff;
+  border-radius: 6px;
+  border: 15px;
+  padding: 4px 8px;
+  font-size: 1.1rem;
+  margin-left: 4px;
+  transition: background 0.2s, color 0.2s;
+}
+
+.fml-table button[title="เพิ่ม"]:hover {
+  background: #2986cc;
+  color: #fff;
+}
+
+/* Modal สำหรับเพิ่มสูตรใหม่ */
+.fml-modal-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.fml-modal-content {
+  max-width: 800px !important;      /* เพิ่มความกว้าง modal */
+  width: 98%;
+  max-height: 90vh;      /* เพิ่มความสูง modal */
+  margin: 30px auto;
+  padding: 0;
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* 1. Sticky Header: เพิ่มสูตรใหม่ + Formula code */
+.fml-modal-header {
+  padding: 24px 32px 18px 32px;
+  background: white;
+  border-radius: 20px 20px 0 0; /* โค้งเฉพาะด้านบน */
+  border-bottom: 1px solid #e0e0e0;
+  z-index: 30;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.fml-modal-title {
+  color: #2986cc;
+  margin-bottom: 18px;
+  font-size: 18px;
+  font-weight: 600;
+  margin-top: 0;
+}
+
+.fml-formula-input-group {
+  margin-bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fml-formula-label {
+  font-weight: 500;
+  color: #2986cc;
+  margin-bottom: 0;
+  margin-right: 6px;
+}
+
+.fml-formula-input {
+  width: 140px;
+  margin-left: 8px;
+  border: 1px solid #61bdee;
+  border-radius: 6px;
+  padding: 4px 12px;
+  font-size: 14px;
+  height: 38px;
+  box-sizing: border-box;
+}
+
+.fml-formula-input:focus {
+  outline: none;
+  border-color: #2986cc;
+  box-shadow: 0 0 0 2px rgba(41, 134, 204, 0.1);
+}
+
+/* 2. Table Container - ส่วนกลางที่จะ scroll */
+.fml-modal-bg .fml-table {
+  width: 100%;
+  min-width: 100%;
+  border-collapse: collapse;   /* เปลี่ยนจาก separate เป็น collapse */
+  border-spacing: 0;
+  table-layout: fixed;         /* ให้แต่ละคอลัมน์แบ่งพื้นที่เท่าๆกัน */
+}
+
+/* 3. Sticky Table Header: หัวตาราง */
+.fml-modal-bg .fml-table thead th {
+  position: sticky;
+  top: 0 !important;
+  background: #61bdee !important;
+  color: white !important;
+  padding: 18px 8px; /* เพิ่มจาก 16px */
+  text-align: center;
+  z-index: 25 !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
+  border-bottom: 3px solid #4a9ed1 !important;
+  font-weight: 600;
+  font-size: 1.08rem;
+  min-width: 120px;
+  width: 25%;
+  box-sizing: border-box;
+  min-height: 55px; /* เพิ่มจาก 50px */
+  vertical-align: middle;
+}
+
+/* ปรับความกว้างให้สมดุล */
+.fml-modal-bg .fml-table thead th:nth-child(1) { width: 25%; } /* Chemical code */
+.fml-modal-bg .fml-table thead th:nth-child(2) { width: 30%; } /* Chemical name */
+.fml-modal-bg .fml-table thead th:nth-child(3) { width: 25%; } /* Chemical use */
+.fml-modal-bg .fml-table thead th:nth-child(4) { width: 20%; } /* Action */
+
+/* ปรับ Body ให้ตรงกับ Header */
+.fml-modal-bg .fml-table tbody td:nth-child(1) { width: 25%; }
+.fml-modal-bg .fml-table tbody td:nth-child(2) { width: 30%; }
+.fml-modal-bg .fml-table tbody td:nth-child(3) { width: 25%; }
+.fml-modal-bg .fml-table tbody td:nth-child(4) { width: 20%; }
+
+/* แก้ไข input ที่มี border-radius: px; */
+.fml-modal-bg .fml-table input {
+  width: calc(100% - 16px);
+  max-width: 100px;
+  border: 1px solid #ddd;
+  border-radius: 8px; /* แก้ไขจาก "px;" */
+  padding: 6px 8px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.fml-modal-bg .fml-table input:focus {
+  outline: none;
+  border-color: #61bdee;
+}
+
+/* ปรับปุ่มใน Action column */
+.fml-btn-delete {
+  background: none;
+  border: none;
+  color: #e53935;
+  cursor: pointer;
+  font-size: 18px; /* เพิ่มจาก 16px */
+  transition: color 0.2s;
+  padding: 8px 12px; /* เพิ่ม padding */
+  border-radius: 6px; /* เพิ่มความโค้ง */
+  min-width: 40px; /* กำหนดความกว้างขั้นต่ำ */
+  min-height: 40px; /* กำหนดความสูงขั้นต่ำ */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fml-btn-delete:hover {
+  color: #c62828;
+  background: rgba(229, 57, 53, 0.1); /* เพิ่มพื้นหลังเมื่อ hover */
+}
+
+.fml-btn-delete:disabled {
+  color: #ccc;
+  cursor: not-allowed;
+}
+
+/* เพิ่ม Modal Footer สำหรับปุ่ม Submit และ Cancel */
+.fml-modal-footer {
+  padding: 16px 32px 8px 32px; /* ลด padding-bottom เหลือ 4px */
+  background: linear-gradient(135deg, #f8fbff 0%, #eef7ff 100%);
+  border-top: 1px solid rgba(97, 189, 238, 0.2);
+  border-radius: 0 0 20px 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  box-shadow: 0 -4px 12px rgba(0,0,0,0.05);
+  position: sticky;
+  bottom: 0;
+  z-index: 30;
+}
+
+/* ปุ่ม Submit แบบเรียบ */
+.fml-btn-submit {
+  background: #61bdee;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 10px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 16px;
+  min-height: 40px;
+  min-width: 100px;
+  transition: background 0.2s;
+  box-shadow: none;
+  text-transform: none;
+  letter-spacing: normal;
+  position: static;
+  overflow: visible;
+}
+
+.fml-btn-submit:hover:not(:disabled) {
+  background: #2986cc;
+}
+
+.fml-btn-submit:disabled {
+  background: #e0e0e0;
+  color: #999;
+  cursor: not-allowed;
+}
+
+/* ปุ่ม Cancel แบบเรียบ */
+.fml-btn-cancel {
+  background: #fff;
+  color: #2986cc;
+  border: 1.5px solid #61bdee;
+  border-radius: 8px;
+  padding: 10px 28px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 16px;
+  min-height: 40px;
+  min-width: 100px;
+  transition: background 0.2s, color 0.2s, border 0.2s;
+  box-shadow: none;
+  text-transform: none;
+  letter-spacing: normal;
+  position: static;
+  overflow: visible;
+}
+
+.fml-btn-cancel:hover {
+  background: #f0f8ff;
+  border-color: #2986cc;
+  color: #1976d2;
+}
+
+.fml-btn-cancel:disabled {
+  background: #f5f5f5;
+  color: #bbb;
+  border-color: #e0e0e0;
+  cursor: not-allowed;
+}
+
+/* ลบไอคอนและเอฟเฟกต์พิเศษออก */
+.fml-btn-submit::after,
+.fml-btn-cancel::after,
+.fml-btn-submit::before,
+.fml-btn-cancel::before {
+  display: none !important;
+  content: none !important;
+  background: none !important;
+  animation: none !important;
+}
+
+/* ปุ่ม เพิ่มแถวใหม่ */
+.fml-btn-add-row {
+  background: #61bdee;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 28px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 16px;
+  min-height: 40px;
+  min-width: 100px;
+  transition: background 0.2s;
+  box-shadow: none;
+  text-transform: none;
+  letter-spacing: normal;
+  position: static;
+  overflow: visible;
+  margin-top: 8px;
+  margin-right: -20px; /* เพิ่มบรรทัดนี้ */
+}
+
+.fml-btn-add-row:hover:not(:disabled) {
+  background: #2986cc;
+}
+
+.fml-btn-add-row:disabled {
+  background: #e0e0e0;
+  color: #999;
+  cursor: not-allowed;
+}
+
+/* ตารางหลัก (search table) - ใช้ class เฉพาะ */
+.fml-main-table-bg {
+  background: #a5d3eb;
+  border-radius: 18px;
+  box-shadow: 0 2px 12px #b3e0ff22;
+  padding: 18px 18px 0 18px;
+  margin-top: 90px;
+  margin-left: -215px;
+  width: fit-content;
+  min-width: 700px;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.fml-main-table-scroll {
+  background: #fafdff;
+  border-radius: 14px;
+  box-shadow: none;
+  padding: 0;
+  max-height: 400px;
+  overflow-y: auto;
+  width: 700px;
+  margin-bottom: 15px;
+}
+
+.fml-main-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 1.08rem;
+  background: #fafdff;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: none;
+}
+
+.fml-main-table th {
+  background: #7cc9fd !important;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 1.08rem;
+  border-top: none;
+  border-bottom: 2.5px solid #b3e0ff;
+  text-align: center;
+  padding: 14px 0;
+  position: sticky !important;
+  top: 0;
+  z-index: 2;
+}
+
+.fml-main-table td {
+  padding: 10px 0;
+  text-align: center;
+  border-bottom: 1.5px solid #c1dfff;
+  min-width: 120px;
+  box-sizing: border-box;
+  background: #fafdff;
+}
+
+.fml-main-table tr:last-child td {
+  border-bottom: none;
+}
+
+.fml-main-table input[type="text"] {
+  border: 1.5px solid #61bdee;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 1rem;
+  width: 90%;
+  background: #fff;
+  transition: border 0.2s, box-shadow 0.2s;
+  box-shadow: 0 1px 4px #b3e0ff22;
+  outline: none;
+}
+
+.fml-main-table input[type="text"]:focus {
+  border: 1.5px solid #2986cc;
+  background: #eaf5ff;
+  box-shadow: 0 2px 8px #b3e0ff44;
+}
+
+/* Responsive สำหรับ Mobile */
+@media (max-width: 768px) {
+  .fml-modal-footer {
+    padding: 16px 12px;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .fml-btn-submit,
+  .fml-btn-cancel {
+    width: 100%;
+    min-width: auto;
+    padding: 12px 0;
+    font-size: 15px;
+  }
+  .fml-btn-add-row {
+    width: 100%;
+    min-width: auto;
+    padding: 12px 0;
+    font-size: 15px;
+  }
+}
+
+/* เพิ่ม Animation เมื่อ Modal เปิด */
+@keyframes buttonSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fml-modal-footer .fml-btn-submit,
+.fml-modal-footer .fml-btn-cancel {
+  animation: buttonSlideIn 0.4s ease-out;
+}
+
+.fml-modal-footer .fml-btn-cancel {
+  animation-delay: 0.1s;
+}
+
+/* เพิ่ม Loading State สำหรับปุ่ม Submit */
+.fml-btn-submit.loading {
+  pointer-events: none;
+  position: relative;
+}
+
+.fml-btn-submit.loading::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border: 2px solid transparent;
+  border-top: 2px solid #fff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+@keyframes spin {
+  0% { transform: translateY(-50%) rotate(0deg); }
+  100% { transform: translateY(-50%) rotate(360deg); }
+}
+
+.fml-btn-submit.loading .btn-text {
+  margin-right: 30px;
+}
+
+/* Focus States สำหรับ Accessibility */
+.fml-btn-submit:focus,
+.fml-btn-cancel:focus {
+  outline: 3px solid rgba(97, 189, 238, 0.4);
+  outline-offset: 2px;
+}
+
+/* ปรับ Modal Content ให้รองรับ Footer */
+.fml-modal-content {
+  max-width: 900px;      /* เพิ่มความกว้าง modal */
+  width: 98%;
+  max-height: 90vh;      /* เพิ่มความสูง modal */
+  margin: 30px auto;
+  padding: 0;
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ดีไซน์ตารางหลัก (search) */
+.fml-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 1.08rem;
+  background: #fff;
+  box-shadow: 0 2px 12px #b3e0ff22;
+}
+
+.fml-table th {
+  background: #e6f2ff;
+  color: #2986cc;
+  font-weight: 600;
+  font-size: 1.08rem;
+  border-top: none;
+  border-bottom: 3px solid #b3e0ff;
+  position: static;
+  box-shadow: none;
+  z-index: 1;
+}
+
+.fml-table td, .fml-table th {
+  padding: 10px 0;
+  text-align: center;
+  border-bottom: 2px solid #e6f2ff;
+  min-width: 120px;
+  box-sizing: border-box;
+  background: #fafdff;
+}
+
+.fml-table tr:last-child td {
+  border-bottom: none;
+}
+
+.fml-table input[type="text"] {
+  border: 1.5px solid #61bdee;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 1rem;
+  width: 90%;
+  background: #fafdff;
+  transition: border 0.2s, box-shadow 0.2s;
+  box-shadow: 0 1px 4px #b3e0ff22;
+  outline: none;
+}
+
+.fml-table input[type="text"]:focus {
+  border: 1.5px solid #2986cc;
+  background: #eaf5ff;
+  box-shadow: 0 2px 8px #b3e0ff44;
+}
+
+.fml-formula-title {
+  display: block;
+  width: 320px;           /* กำหนดความกว้างตายตัว */
+  margin: 32px 0 18px 60px; /* ขยับจากซ้ายเท่ากับตาราง */
+  padding: 10px 28px;
+  color: #2986cc;
+  font-size: 1.15rem;
+  font-weight: 700;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px #b3e0ff22;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fml-main-table-bg {
+  margin-left: -350px;      /* ให้ตรงกับ .fml-formula-title */
+  margin-top: 80px;
+}
+
+.fml-action-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 60px;
+  height: 40px;
+}
+
+.fml-main-table th:last-child,
+.fml-main-table td:last-child {
+  padding: 0;
+}
+
+.fml-main-table-area {
+  display: flex;
+  gap: 32px;
+}
+
+.fml-formula-list-panel {
+  min-width: 250px;
+  max-width: 220px;
+  background: #fafdff;
+  border-radius: 14px;
+  box-shadow: 0 2px 12px #b3e0ff22;
+  padding: 18px 12px 12px 12px;
+  height: 400px; /* กำหนดความสูงสูงสุด */
+  align-self: flex-start;
+  margin-top: 60px;
+  overflow-y: auto;
+  /* ซ่อน scrollbar */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+.fml-formula-list-title {
+  font-weight: 700;
+  color: #2986cc;
+  font-size: 1.08rem;
+  margin-bottom: 10px;
+  letter-spacing: 0.5px;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #fafdff;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+.fml-formula-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.fml-formula-list li.active {
+  background: #e3f2fd;
+  color: #2986cc;
+  font-weight: 700;
+}
+
+.fml-formula-input-group select.fml-formula-input {
+  padding: 8px 12px;
+  border: 1.5px solid #61bdee;
+  border-radius: 8px;
+  background: #f7fbff;
+  color: #2986cc;
+  font-size: 1rem;
+  outline: none;
+  transition: border 0.2s;
+  min-width: 120px;
+  appearance: none;
+  cursor: pointer;
+}
+
+
+.fml-formula-input-group label.fml-formula-label {
+  margin-bottom: 4px;
+  color: #2986cc;
+  font-weight: 500;
+  display: block;
+}
+
+/* จัด Formula code กับ Remark ให้อยู่บรรทัดเดียวกันและจัดกลางแนวตั้ง */
+.fml-modal-header > div[style*="display: flex"] {
+  align-items: center;
+  margin-bottom: 0;
+  gap: 24px; /* เพิ่มระยะห่างระหว่างช่อง */
+}
+
+/* ปรับ input group ให้ label กับ input อยู่แนวนอน */
+.fml-formula-input-group {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0;
+  gap: 8px;
+}
+
+/* ปรับ label ให้ margin ขวาเล็กน้อย */
+.fml-formula-label {
+  margin-bottom: 0;
+  margin-right: 6px;
+  color: #2986cc;
+  font-weight: 500;
+  display: block;
+}
+
+/* ปรับขนาด input และ select ให้สูงเท่ากัน */
+.fml-formula-input,
+.fml-formula-input-group select.fml-formula-input {
+  height: 38px;
+  box-sizing: border-box;
+}
