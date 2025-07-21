@@ -62,7 +62,19 @@
   margin: 32px 0 0 60px;
 }
 
-.input-code, .input-lot, .input-date {
+.input-code {
+  border: none;
+  border-radius: 12px;
+  padding: 12px 25px;
+  font-size: 18px;
+  background: none;
+  color: #2986cc;
+  width: 228px;
+  margin-right: 0;
+  outline: none;
+  box-shadow: 0 2px 8px rgba(41,134,204,0.07);
+}
+.input-lot, .input-date {
   border: none;
   border-radius: 12px;
   padding: 12px 25px;
@@ -74,7 +86,6 @@
   outline: none;
   box-shadow: 0 2px 8px rgba(41,134,204,0.07);
 }
-
 .input-code {
   width: 110px;
   height: 36px;
@@ -512,4 +523,125 @@
 
 .productplan-bottom-btn:hover {
   background: #6797ae;
+}
+
+/* กล่องรวม prefix dropdown + product code input */
+.productplan-prefix-group {
+  display: flex;
+  align-items: center;
+  background: #fafdff;
+  border: 1.5px solid #61bdee;
+  border-radius: 12px;
+  padding: 0;
+  height: 38px;
+  min-width: 210px;
+  box-sizing: border-box;
+  margin-right: 8px;
+  overflow: hidden;
+  transition: border 0.2s, background 0.2s;
+}
+
+.productplan-prefix-group select {
+  border: none;
+  background: transparent;
+  color: #2986cc;
+  font-size: 1rem;
+  height: 38px;
+  padding: 0 14px 0 14px;
+  border-radius: 12px 0 0 12px;
+  outline: none;
+  min-width: 70px;
+  cursor: pointer;
+  appearance: none;
+  border-right: 1.5px solid #61bdee;
+  transition: background 0.2s;
+}
+
+.productplan-prefix-group input[type="text"] {
+  border: none;
+  background: transparent;
+  font-size: 1rem;
+  color: #2986cc;
+  height: 38px;
+  padding: 0 14px;
+  outline: none;
+  min-width: 90px;
+  flex: 1;
+  border-radius: 0 12px 12px 0;
+}
+
+.productplan-prefix-group:focus-within {
+  border-color: #2986cc;
+  background: #e3f2fd;
+}
+
+.productplan-prefix-group select:focus,
+.productplan-prefix-group input[type="text"]:focus {
+  background: #e3f2fd;
+}
+
+.productplan-prefix-group select:hover,
+.productplan-prefix-group input[type="text"]:hover {
+  background: #f0f7ff;
+}
+
+/* กล่อง input group ดีไซน์เดียวกับ prefix-group */
+.productplan-input-group {
+  display: flex;
+  align-items: center;
+  background: #fafdff;
+  border: 1.5px solid #61bdee;
+  border-radius: 12px;
+  padding: 0;
+  height: 38px;
+  min-width: 110px;
+  box-sizing: border-box;
+  margin-right: 8px;
+  overflow: hidden;
+  transition: border 0.2s, background 0.2s;
+}
+
+.productplan-input-group select,
+.productplan-input-group input[type="text"],
+.productplan-input-group input[type="number"],
+.productplan-input-group input[type="date"] {
+  border: none;
+  background: transparent;
+  color: #2986cc;
+  font-size: 1rem;
+  height: 38px;
+  padding: 0 14px;
+  outline: none;
+  min-width: 70px;
+  flex: 1;
+  border-radius: 12px;
+  transition: background 0.2s;
+}
+
+.productplan-input-group input[type="date"] {
+  color-scheme: light;
+}
+
+.productplan-input-group:focus-within {
+  border-color: #2986cc;
+  background: #e3f2fd;
+}
+
+.productplan-input-group select:focus,
+.productplan-input-group input:focus {
+  background: #e3f2fd;
+}
+
+.productplan-input-group select:hover,
+.productplan-input-group input:hover {
+  background: #f0f7ff;
+}
+
+.productplan-input-group input::placeholder {
+  color: #b3d8f7;
+  opacity: 1;
+}
+
+.productplan-input-group.input-date-group {
+  margin-left: 24px;
 }

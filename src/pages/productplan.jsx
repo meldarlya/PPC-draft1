@@ -9,6 +9,7 @@ const ProductPlan = () => {
     const [lotInput, setLotInput] = useState('');
     const [percentInput, setPercentInput] = useState('');
     const [dateInput, setDateInput] = useState(new Date().toISOString().slice(0, 10));
+    const [prefix, setPrefix] = useState(""); // เพิ่ม state สำหรับ prefix
 
     // state สำหรับแสดงผลหลังค้นหา
     const [colorCode, setColorCode] = useState('');
@@ -379,12 +380,12 @@ const ProductPlan = () => {
             </div>
             <div className="productplan-toolbar">
                 <span className="input-label">Department :</span>
-                <select
+                <div className="productplan-input-group">
+                  <select
                     className="input-dropdown"
-                    style={{ marginRight: 8, width: 110, height: 45 }}
                     value={department}
                     onChange={e => setDepartment(e.target.value)}
-                >
+                  >
                     <option value="">Department</option>
                     <option value="B1">B1</option>
                     <option value="B2">B2</option>
@@ -395,88 +396,78 @@ const ProductPlan = () => {
                     <option value="C5">C5</option>
                     <option value="Pi1">Pi-1</option>
                     <option value="Pi2">Pi-2</option>
-                </select>
+                  </select>
+                </div>
+
                 <span className="input-label">Product code :</span>
-                <input
+                <div className="productplan-prefix-group">
+                  <select
+                    value={prefix}
+                    onChange={e => setPrefix(e.target.value)}
+                  >
+                    <option value="">Prefix</option>
+                    <option value="Syn.">Syn.</option>
+                    <option value="Pi-1">Pi-1</option>
+                    <option value="Pi-2">Pi-2</option>
+                  </select>
+                  <input
                     className="input-code"
-                    style={{ width: 110 }}
                     placeholder="enter product code"
                     value={colorCodeInput}
                     onChange={e => setColorCodeInput(e.target.value)}
-                />
+                  />
+                </div>
                 <button className="icon-btn" onClick={handleSearch}><FaSearch /></button>
                 <span className="input-label">Lot :</span>
-                <input
-                    className="input-lot"
-                    style={{ width: 70 }}
+                <div className="productplan-input-group" style={{ minWidth: 70, maxWidth: 90 }}>
+                  <input
+                    type="text"
                     placeholder="enter Lot"
                     value={lotInput}
                     onChange={e => setLotInput(e.target.value)}
-                />
+                    style={{ width: "100%", minWidth: 0, padding: "0 8px" }}
+                  />
+                </div>
                 <button className="icon-btn" onClick={() => setLot(lotInput)}><FaCheck /></button>
                 <span className="input-label">% :</span>
-                <div style={{ display: "inline-flex", alignItems: "center" }}>
-                    <input
-                        className="input-percent"
-                        placeholder="%"
-                        style={{ width: 50 }}
-                        value={percentInput}
-                        onChange={e => setPercentInput(e.target.value)}
-                    />
-                    <button
-                        className="icon-btn"
-                        style={{ marginLeft: 4 }}
-                        onClick={() => setPercent(percentInput)}
-                        title="Update %"
-                    >
-                        <FaCheck />
-                    </button>
-                    {/* ปุ่มที่ย้ายมา */}
-                    {/* ปุ่มแคท */}
-                    <button
-                        className="productplan-bottom-btn"
-                        style={{
-                        }}
-                    >
-                        ปุ่มแคท
-                    </button>
+                <div className="productplan-input-group" style={{ minWidth: 50, maxWidth: 70 }}>
+                  <input
+                    type="text"
+                    placeholder="%"
+                    value={percentInput}
+                    onChange={e => setPercentInput(e.target.value)}
+                    style={{ width: "100%", minWidth: 0, padding: "0 8px" }}
+                  />
                 </div>
-                <div className="toolbar-right">
-                    <input
-                        className="input-date"
-                        type="date"
-                        value={dateInput}
-                        onChange={e => setDateInput(e.target.value)}
-                    />
-                </div>
+
                 <button
-                    className="submit-btn"
-                    style={{
-                        marginLeft: 16,
-                        padding: "8px 24px",
-                        background: "#61bdee",
-                        color: "#fff",
-                        border: "none",
-                        borderRadius: 12,
-                        fontWeight: 600,
-                        fontSize: 18,
-                        cursor: "pointer"
-                    }}
-                    onClick={() => {
-                        // เก็บข้อมูลลง localStorage
-                        const planRData = JSON.parse(localStorage.getItem('planr-table') || '[]');
-                        planRData.push({
-                            department,
-                            colorCode: colorCodeInput,
-                            lot: lotInput,
-                            date: dateInput,
-                            percent: percentInput
-                        });
-                        localStorage.setItem('planr-table', JSON.stringify(planRData));
-                        // reset input ถ้าต้องการ
-                    }}
+                  className="productplan-formula-btn"
+                  onClick={() => navigate('/formula')}
+                  style={{
+                    background: "#32698e",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: "12px",
+                    padding: "8px 22px",
+                    fontSize: "18px",
+                    fontWeight: 600,
+                    marginLeft: 52,
+                    cursor: "pointer",
+                    transition: "background 0.2s"
+                  }}
                 >
+                  Formula
                 </button>
+                <div
+                  className="productplan-input-group"
+                  style={{ marginLeft: 24 }} // เพิ่มบรรทัดนี้
+                >
+                  <input
+                    type="date"
+                    value={dateInput}
+                    onChange={e => setDateInput(e.target.value)}
+                  />
+                </div>
             </div>
             <div className="productplan-content-wrapper" style={{ display: "flex", flexDirection: "row", position: "relative" }}>
                 <div className="productplan-content">
@@ -619,7 +610,7 @@ const ProductPlan = () => {
                 {showConfirm && (
                     <div className="modal-overlay">
                         <div className="modal-content">
-                            <h3>ยืนยันข้อมูลก่อนบันทึก</h3>
+                            <h3>Submit Form</h3>
                             <div className="confirm-list">
                                 <div>Department: <b>{department}</b></div>
                                 <div>Color code: <b>{colorCodeInput}</b></div>

@@ -4,7 +4,7 @@ body, #root {
   min-height: 100vh;
   width: 100vw;
   font-family: Arial, sans-serif;
-  background: linear-gradient(to bottom, #ffffff 0%, #58b7ff 90%);
+  background: linear-gradient(to bottom, #ffffff 0%, #90cfff 90%);
   background-size: 100% 200%;
   animation: gradientMove 12s ease-in-out infinite alternate;
 }
